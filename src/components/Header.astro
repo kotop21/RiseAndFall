@@ -1,15 +1,16 @@
 ---
 const { isSticky = false } = Astro.props;
 const pathname = Astro.url.pathname;
+const base = import.meta.env.BASE_URL;
 ---
 
 <header class:list={["header-wrapper", { sticky: isSticky }]}>
     <div class="topbar">
         <div class="logo">Rise And Fall <span>Community</span></div>
         <nav class="nav-links">
-            <a href="/" class={pathname === "/" ? "active" : ""}>Главная</a>
-            <a href="/leaderboard" class={pathname.startsWith("/leaderboard") ? "active" : ""}>Рейтинговая таблица</a>
-            <a href="/wiki" class={pathname.startsWith("/wiki") ? "active" : ""}>Вики</a>
+            <a href={`${base}/`} class={pathname === `${base}/` || pathname === `${base}` ? "active" : ""}>Главная</a>
+            <a href={`${base}/leaderboard`} class={pathname.startsWith(`${base}/leaderboard`) ? "active" : ""}>Рейтинговая таблица</a>
+            <a href={`${base}/wiki`} class={pathname.startsWith(`${base}/wiki`) ? "active" : ""}>Вики</a>
         </nav>
     </div>
 </header>
