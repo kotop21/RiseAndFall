@@ -2,86 +2,187 @@
 import '@styles/global.css';
 import Header from '@components/Header.astro';
 
-const files = Object.values(import.meta.glob('@docs/*.md', { eager: true }));
-const base = import.meta.env.BASE_URL;
+export async function getStaticPaths() {
+    const files = Object.values(import.meta.glob('@docs/*.md', { eager: true }));
+    
+    return files.map((file: any) => {
+        const slug = file.file.split('/').pop().replace('.md', '');
+        return {
+            params: { slug },
+            props: { currentFile: file, allFiles: files }
+        };
+    });
+}
 
-const allPages = files.map((f: any) => {
-    const slug = f.file.split('/').pop().replace('.md', '');
-    return { slug, title: f.frontmatter.title || slug };
+const { currentFile, allFiles } = Astro.props;
+const { Content, frontmatter, getHeadings } = currentFile;
+const headings = getHeadings();
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const allPages = allFiles.map((f: any) => {
+    const s = f.file.split('/').pop().replace('.md', '');
+    return { slug: s, title: f.frontmatter.title || s };
 });
+
+const currentSlug = Astro.params.slug;
 ---
 
 <!doctype html>
 <html lang="ru">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width" />
-        <title>Вики | Rise and Fall</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <title>{frontmatter.title} | Wiki</title>
     </head>
     <body>
-        <Header />
-        <main class="wiki-index">
-            <div class="card-grid">
-                {allPages.map(page => (
-                    <a href={`${base}/wiki/${page.slug}`} class="card">
-                        <h2>{page.title}</h2>
-                        <p>Читать статью ↗</p>
-                    </a>
-                ))}
-            </div>
-        </main>
+        <Header isSticky={true} />
+
+        <div class="wiki-layout">
+            <aside class="left-sidebar">
+                <h3>Все статьи</h3>
+                <nav class="doc-links">
+                    {allPages.map(page => (
+                        <a 
+                            href={`${base}/wiki/${page.slug}/`} 
+                            class={currentSlug === page.slug ? "active" : ""}
+                        >
+                            {page.title}
+                        </a>
+                    ))}
+                </nav>
+            </aside>
+
+            <aside class="right-sidebar">
+                <div class="sticky-toc">
+                    <nav class="toc-links">
+                        {headings.map(heading => (
+                            <a href={`#${heading.slug}`} class={`depth-${heading.depth}`}>
+                                {heading.text}
+                            </a>
+                        ))}
+                    </nav>
+                </div>
+            </aside>
+
+            <main class="markdown-content">
+                <Content />
+            </main>
+        </div>
     </body>
 </html>
 
 <style>
-    .wiki-index {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 4rem 2rem;
-    }
-
-    .card-grid {
+    .wiki-layout {
+        font-size: 15px;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .card {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        grid-template-columns: 250px minmax(0, 1fr) 250px;
+        gap: 3rem;
+        max-width: 1500px;
+        margin: 0 auto;
         padding: 2rem;
-        border-radius: 8px;
-        text-decoration: none;
-        transition: 0.2s;
-        border-top: 3px solid var(--accent);
+        align-items: start;
     }
 
-    .card:hover {
-        background: rgba(255, 255, 255, 0.05);
-        transform: translateY(-2px);
+    .left-sidebar {
+        position: sticky;
+        top: 5rem;
+        max-height: calc(100vh - 6rem);
+        overflow-y: auto;
+        padding-right: 1rem;
     }
 
-    .card h2 {
+    aside h3 {
         color: var(--fg);
-        margin: 0 0 1rem 0;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
     }
 
-    .card p {
+    .doc-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .doc-links a {
         color: #888;
-        margin: 0;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        text-decoration: none;
+    }
+
+    .doc-links a.active {
+        color: var(--accent);
+        font-weight: bold;
+    }
+
+    .markdown-content {
+        color: var(--fg);
+        line-height: 1.7;
+        min-width: 0;
+    }
+
+    .markdown-content :global(h1) {
+        color: var(--accent);
+        font-size: 2.5rem;
+        margin-top: 0;
+        margin-bottom: 2rem;
+    }
+
+    .markdown-content :global(h2) {
+        font-size: 1.8rem;
+        margin-top: 3rem;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
+    }
+
+    .markdown-content :global(pre) {
+        padding: 1.2rem;
+        border-radius: 8px;
+        background: #111 !important;
+        margin: 1.5rem 0;
+        overflow-x: auto;
+    }
+
+    .right-sidebar {
+        position: sticky;
+        top: 5rem;
+        max-height: calc(100vh - 6rem);
+    }
+
+    .sticky-toc {
+        background: rgba(15, 15, 15, 0.5);
+        padding: 0.8rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        overflow-y: auto;
+    }
+
+    .toc-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .toc-links a {
+        color: #A1A1AA;
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+
+    .depth-2 { margin-left: 0.8rem; }
+    .depth-3 { margin-left: 1.5rem; font-size: 0.8rem !important; }
+
+    @media (max-width: 1024px) {
+        .wiki-layout { grid-template-columns: 200px minmax(0, 1fr); }
+        .right-sidebar { display: none; }
     }
 
     @media (max-width: 768px) {
-        .wiki-index {
-            padding: 2rem 1rem;
-        }
-        .card-grid {
-            grid-template-columns: 1fr;
-        }
-        .card {
-            padding: 1.5rem;
-        }
+        .wiki-layout { display: flex; flex-direction: column; padding: 1rem; }
+        .left-sidebar { display: none; }
+        .right-sidebar { display: block; position: static; margin-bottom: 2rem; order: -1; }
     }
 </style>
