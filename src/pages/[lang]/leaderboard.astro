@@ -12,32 +12,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url).href;
 
 const pageTitle = lang === 'ru' ? 'Рейтинговая таблица | Rise and Fall' : 'Leaderboard | Rise and Fall';
 const pageDesc = lang === 'ru' ? 'Глобальный рейтинг игроков Rise and Fall в режиме 1х1.' : 'Global player rankings for Rise and Fall in 1v1 mode.';
-
-const apiData = [
-    { name: "xxds", rating: 3250 }, { name: "RomeInvictus", rating: 2840 },
-    { name: "Legatus_Maximus", rating: 2750 }, { name: "ShadowBlade", rating: 2100 },
-    { name: "Aurelius", rating: 2050 }, { name: "Vercingetorix", rating: 2010 },
-    { name: "IronFist", rating: 1420 }, { name: "Spartacus", rating: 1350 },
-    { name: "Crixus", rating: 1100 }, { name: "NoobSlayer99", rating: 800 },
-    { name: "FreshBlood", rating: 650 }, { name: "Peasant", rating: 420 },
-];
-
-const TIERS = [
-    { id: "emperor", name: "Emperor", icon: "👑", color: "#F4D03F", minRating: 3000 },
-    { id: "centurion", name: "Centurion", icon: "🛡️", color: "#E74C3C", minRating: 2500 },
-    { id: "legionnaire", name: "Legionnaire", icon: "⚔️", color: "#9B59B6", minRating: 2000 },
-    { id: "gladiator", name: "Gladiator", icon: "🔱", color: "#3498DB", minRating: 1000 },
-    { id: "recruit", name: "Recruit", icon: "🎯", color: "#2ECC71", minRating: 0 },
-];
-
-const sortedPlayers = apiData.sort((a, b) => b.rating - a.rating);
-const columns = TIERS.map((tier, index) => {
-    const maxRating = index === 0 ? Infinity : TIERS[index - 1].minRating;
-    return {
-        ...tier,
-        players: sortedPlayers.filter(p => p.rating >= tier.minRating && p.rating < maxRating)
-    };
-});
+const loadingText = lang === 'ru' ? 'Загрузка рейтинга...' : 'Loading leaderboard...';
+const errorText = lang === 'ru' ? 'Ошибка подключения к серверу рейтинга.' : 'Failed to connect to the leaderboard server.';
+const nothing = lang === 'ru' ? 'Пусто' : 'Empty';
 ---
 
 <!doctype html>
@@ -56,35 +33,98 @@ const columns = TIERS.map((tier, index) => {
     <body>
         <Header lang={lang} />
         <main>
-            <div class="tiers-grid">
-                {columns.map(column => (
-                    <div class="tier-column" style={`--tier-color: ${column.color};`}>
-                        <div class="tier-header">
-                            <span>{column.icon}</span>
-                            <h2>{column.name}</h2>
-                        </div>
-                        <div class="tier-body">
-                            {column.players.length === 0 ? (
-                                <div class="empty-state">Пусто</div>
-                            ) : (
-                                column.players.map(player => (
-                                    <div class="player-card">
-                                        <span class="player-name">{player.name}</span>
-                                        <span style="color: var(--accent); font-size: 0.9rem;">{player.rating}</span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                ))}
+            <div class="tiers-grid" id="leaderboard-container">
+                <div style="grid-column: 1 / -1; text-align: center; color: var(--fg);">
+                    {loadingText}
+                </div>
             </div>
         </main>
+
+        <script define:vars={{ nothing, errorText }}>
+            const API_URL = "https://vds-proxy-raf.vitiat-gom.workers.dev/rating";
+
+            const TIERS = [
+                { id: "emperor", name: "Emperor", icon: "👑", color: "#F4D03F", minRating: 3000 },
+                { id: "centurion", name: "Centurion", icon: "🛡️", color: "#E74C3C", minRating: 2500 },
+                { id: "legionnaire", name: "Legionnaire", icon: "⚔️", color: "#9B59B6", minRating: 2000 },
+                { id: "gladiator", name: "Gladiator", icon: "🔱", color: "#3498DB", minRating: 1000 },
+                { id: "recruit", name: "Recruit", icon: "🎯", color: "#2ECC71", minRating: 0 },
+            ];
+
+            async function fetchAndRenderLeaderboard() {
+                const container = document.getElementById('leaderboard-container');
+
+                try {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    
+                    const rawData = await response.json();
+
+                    const apiData = rawData.map(player => ({
+                        name: player.nickname,
+                        rating: player.rating
+                    }));
+
+                    const sortedPlayers = apiData.sort((a, b) => b.rating - a.rating);
+                    const columns = TIERS.map((tier, index) => {
+                        const maxRating = index === 0 ? Infinity : TIERS[index - 1].minRating;
+                        return {
+                            ...tier,
+                            players: sortedPlayers.filter(p => p.rating >= tier.minRating && p.rating < maxRating)
+                        };
+                    });
+
+                    container.innerHTML = '';
+
+                    columns.forEach(column => {
+                        const columnDiv = document.createElement('div');
+                        columnDiv.className = 'tier-column';
+                        columnDiv.style.setProperty('--tier-color', column.color);
+
+                        let columnHTML = `
+                            <div class="tier-header">
+                                <span>${column.icon}</span>
+                                <h2>${column.name}</h2>
+                            </div>
+                            <div class="tier-body">
+                        `;
+
+                        if (column.players.length === 0) {
+                            columnHTML += `<div class="empty-state">${nothing}</div>`;
+                        } else {
+                            column.players.forEach(player => {
+                                columnHTML += `
+                                    <div class="player-card">
+                                        <span class="player-name">${player.name}</span>
+                                        <span style="color: var(--accent); font-size: 0.9rem;">${player.rating}</span>
+                                    </div>
+                                `;
+                            });
+                        }
+
+                        columnHTML += `</div>`;
+                        columnDiv.innerHTML = columnHTML;
+                        container.appendChild(columnDiv);
+                    });
+
+                } catch (error) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; color: #E74C3C;">
+                            ${errorText}
+                        </div>
+                    `;
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", fetchAndRenderLeaderboard);
+        </script>
     </body>
 </html>
 
-<style>
+<style is:global>
     main { max-width: 1400px; margin: 0 auto; padding: 2rem 2rem 5rem 2rem; display: flex; flex-direction: column; gap: 3rem; }
     .tiers-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2rem; width: 100%; }
+    .tier-column { display: flex; flex-direction: column; }
     .tier-header { display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--tier-color); }
     .tier-header h2 { font-size: 1rem; color: var(--tier-color); margin: 0; text-transform: uppercase; }
     .tier-body { display: flex; flex-direction: column; gap: 0.2rem; }
