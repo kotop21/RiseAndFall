@@ -19,6 +19,12 @@ const allPages = langFiles.map((f: any) => {
 });
 
 const readArticle = lang === 'ru' ? 'Читать статью' : 'Read the article';
+
+const siteUrl = 'https://kotop21.github.io';
+let pathWithoutLang = Astro.url.pathname.replace(new RegExp(`^${base}/(en|ru)`), '');
+if (!pathWithoutLang.endsWith('/')) pathWithoutLang += '/';
+const urlRu = `${siteUrl}${base}/ru${pathWithoutLang}`;
+const urlEn = `${siteUrl}${base}/en${pathWithoutLang}`;
 ---
 
 <!doctype html>
@@ -27,6 +33,11 @@ const readArticle = lang === 'ru' ? 'Читать статью' : 'Read the arti
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width" />
         <title>Вики | Rise and Fall</title>
+        <link rel="icon" type="image/png" href="/favicon.png">
+        
+        <link rel="alternate" hreflang="ru" href={urlRu} />
+        <link rel="alternate" hreflang="en" href={urlEn} />
+        <link rel="alternate" hreflang="x-default" href={urlEn} />
     </head>
     <body>
         <Header lang={lang} />
@@ -44,7 +55,6 @@ const readArticle = lang === 'ru' ? 'Читать статью' : 'Read the arti
 </html>
 
 <style>
-    /* Твои стили wiki-index */
     .wiki-index { max-width: 1000px; margin: 0 auto; padding: 4rem 2rem; }
     .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
     .card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: 8px; text-decoration: none; transition: 0.2s;}

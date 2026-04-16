@@ -15,6 +15,13 @@ const pageDesc = lang === 'ru' ? 'Глобальный рейтинг игрок
 const loadingText = lang === 'ru' ? 'Загрузка рейтинга...' : 'Loading leaderboard...';
 const errorText = lang === 'ru' ? 'Ошибка подключения к серверу рейтинга.' : 'Failed to connect to the leaderboard server.';
 const nothing = lang === 'ru' ? 'Пусто' : 'Empty';
+
+const siteUrl = 'https://kotop21.github.io';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+let pathWithoutLang = Astro.url.pathname.replace(new RegExp(`^${base}/(en|ru)`), '');
+if (!pathWithoutLang.endsWith('/')) pathWithoutLang += '/';
+const urlRu = `${siteUrl}${base}/ru${pathWithoutLang}`;
+const urlEn = `${siteUrl}${base}/en${pathWithoutLang}`;
 ---
 
 <!doctype html>
@@ -29,6 +36,11 @@ const nothing = lang === 'ru' ? 'Пусто' : 'Empty';
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalURL} />
         <link rel="canonical" href={canonicalURL} />
+        <link rel="icon" type="image/png" href="/favicon.png">
+        
+        <link rel="alternate" hreflang="ru" href={urlRu} />
+        <link rel="alternate" hreflang="en" href={urlEn} />
+        <link rel="alternate" hreflang="x-default" href={urlEn} />
     </head>
     <body>
         <Header lang={lang} />
