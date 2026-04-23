@@ -2,7 +2,7 @@
 
 # ⚔️ Rise And Fall Community Hub
 
-🇷🇺 [Русский](#-русская-версия) | 🇬🇧 [English](#-english-version) | 🇺🇦 [Українська](#-українська-версія)
+[Русский](#-русская-версия) | 🇬🇧 [English](#-english-version) | 🇺🇦 [Українська](#-українська-версія)
 
 ![Astro](https://img.shields.io/badge/Astro-SSG%20%2F%20No--JS-FF5D01?logo=astro\&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20Typing-3178C6?logo=typescript\&logoColor=white)
@@ -61,7 +61,7 @@ This provides a balance between:
 
 ---
 
-## 🇷🇺 Русская версия
+## Русская версия
 
 <a id="-русская-версия"></a>
 
