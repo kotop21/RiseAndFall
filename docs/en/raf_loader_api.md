@@ -1,27 +1,207 @@
 ---
-title: "RafLoader Guide (Lua)"
-description: "The Ultimate RafLoader Guide: building Lua scripts for Rise and Fall: Civilization at War. Learn how to modify game logic in real-time, use hooks, and manage process memory."
-keywords: "rise and fall, patch, balance, fix, installation, guide"
+title: "RafLoader Lua Guide"
+description: "Complete guide to developing Lua scripts for RafLoader. Learn how to work with game memory, hooks, tick callbacks, version checking, and crash recovery."
+keywords: "RafLoader, Lua, Rise and Fall, modding, hooks, memory, scripting"
 ---
 
-## 📦 Memory API
+# RafLoader Lua API
+
+RafLoader automatically loads all Lua scripts from the `scripts/` directory after the game starts.
+
+Project structure:
+
+```
+Rise And Fall/
+│
+├── RafLoader.asi
+└── scripts/
+    ├── example.lua
+    ├── balance.lua
+    └── ui.lua
+```
+
+> **Note**
+>
+> Files whose names begin with `_` or `.` are skipped by the script loader.
+>
+> Examples:
+>
+> - `_debug.lua`
+> - `.disabled.lua`
+
+---
+
+# 📌 Global Modules
+
+All APIs are available through the `Engine` object.
+
+```lua
+local memory  = _G.Engine.Memory
+local hooks   = _G.Engine.Hooks
+local tick    = _G.Engine.Tick
+local version = _G.Engine.Version
+local crash   = _G.Engine.VahCrash
+```
+
+---
+
+# 📝 Logging
+
+The standard Lua `print()` function is overridden by RafLoader.
+
+Any output is automatically written to the RafLoader log.
+
+```lua
+print("Hello World")
+print("Player HP:", 250)
+```
+
+---
+
+# 📦 Version API
+
+```lua
+local version = _G.Engine.Version
+```
+
+## get_number()
+
+Returns the current RafLoader version as a numeric value.
+
+### Returns
+
+- `number`
+
+```lua
+local ver = version.get_number()
+```
+
+---
+
+## get_string()
+
+Returns the current RafLoader version as a string.
+
+### Returns
+
+- `string`
+
+```lua
+print(version.get_string())
+-- 0.2.1
+```
+
+---
+
+## check(major, minor, patch)
+
+Checks whether the current RafLoader version satisfies the minimum required version.
+
+### Parameters
+
+- `major (number)`
+- `minor (number)`
+- `patch (number)`
+
+### Returns
+
+- `boolean`
+
+```lua
+if version.check(0, 2, 1) then
+    print("Version supported")
+end
+```
+
+---
+
+## require(major, minor, patch)
+
+Requires a minimum RafLoader version.
+
+Throws an error if the current version is lower than required.
+
+### Parameters
+
+- `major (number)`
+- `minor (number)`
+- `patch (number)`
+
+### Returns
+
+- `true`
+
+```lua
+version.require(0, 2, 1)
+```
+
+---
+
+# 🔄 Tick API
+
+```lua
+local tick = _G.Engine.Tick
+```
+
+## add(callback)
+
+Registers a callback that is executed every game tick.
+
+### Parameters
+
+- `callback (function)`
+
+### Returns
+
+- `nil`
+
+```lua
+tick.add(function()
+    print("Tick")
+end)
+```
+
+---
+
+## clear()
+
+Removes all registered tick callbacks.
+
+### Returns
+
+- `nil`
+
+```lua
+tick.clear()
+```
+
+---
+
+# 📦 Memory API
 
 ```lua
 local memory = _G.Engine.Memory
 ```
 
-### write_nop(address, size)
+> **Warning**
+>
+> All memory read and write operations access the game's process memory directly.
+> Writing to an invalid address may cause the game to crash.
 
-Fills a memory region with NOP instructions (0x90).
+---
 
-**Parameters:**
+## write_nop(address, size)
 
-* `address (number)` — memory address (uintptr_t)
-* `size (number)` — number of bytes
+Fills a memory region with `NOP (0x90)` instructions.
 
-**Returns:**
+### Parameters
 
-* `boolean` — whether the patch was applied successfully
+- `address (number)`
+- `size (number)`
+
+### Returns
+
+- `boolean`
 
 ```lua
 memory.write_nop(0x401000, 5)
@@ -29,75 +209,76 @@ memory.write_nop(0x401000, 5)
 
 ---
 
-### patch(address, bytes)
+## patch(address, bytes)
 
-Writes arbitrary bytes to memory.
+Writes an arbitrary sequence of bytes to memory.
 
-**Parameters:**
+### Parameters
 
-* `address (number)` — address
-* `bytes (table<number>)` — array of bytes (0–255)
+- `address (number)`
+- `bytes (table<number>)`
 
-**Returns:**
+### Returns
 
-* `boolean`
+- `boolean`
 
 ```lua
-memory.patch(0x401000, {0xEB, 0x01})
+memory.patch(0x401000, {
+    0xEB,
+    0x01
+})
 ```
 
 ---
 
-### read_int(address)
+## read_int(address)
 
-Reads an `int32`.
+Reads a 32-bit signed integer (`int32`) from memory.
 
-**Parameters:**
+### Parameters
 
-* `address (number)`
+- `address (number)`
 
-**Returns:**
+### Returns
 
-* `number` — int32 value
+- `number`
 
 ```lua
 local hp = memory.read_int(0x500000)
-print(hp)
 ```
 
 ---
 
-### read_float(address)
+## read_float(address)
 
-Reads a `float`.
+Reads a `float` value from memory.
 
-**Parameters:**
+### Parameters
 
-* `address (number)`
+- `address (number)`
 
-**Returns:**
+### Returns
 
-* `number` — float value
+- `number`
 
 ```lua
 local speed = memory.read_float(0x500100)
-print(speed)
 ```
 
 ---
 
-### write_int(address, value)
+## write_int(address, value)
 
-Writes an `int32`.
+Writes a 32-bit signed integer (`int32`) to memory.
 
-**Parameters:**
+### Parameters
 
-* `address (number)`
-* `value (number)` — int32 value
+- `address (number)`
+- `value (number)`
 
-**Returns:**
+### Returns
 
-* `nil`
+- `nil`
 
 ```lua
 memory.write_int(0x500000, 999)
@@ -105,18 +286,18 @@ memory.write_int(0x500000, 999)
 
 ---
 
-### write_float(address, value)
+## write_float(address, value)
 
-Writes a `float`.
+Writes a `float` value to memory.
 
-**Parameters:**
+### Parameters
 
-* `address (number)`
-* `value (number)` — float value
+- `address (number)`
+- `value (number)`
 
-**Returns:**
+### Returns
 
-* `nil`
+- `nil`
 
 ```lua
 memory.write_float(0x500100, 3.14)
@@ -124,163 +305,139 @@ memory.write_float(0x500100, 3.14)
 
 ---
 
-## ⌨️ Input API
-
-```lua
-local input = _G.Engine.Input
-```
-
-### bind(key, callback)
-
-Triggers a function when a key is pressed (fires once per press, not while holding).
-
-**Parameters:**
-
-* `key (number)` — virtual-key code (WinAPI), for example:
-
-  * `0x41` — A
-  * `0x46` — F
-  * `0x20` — Space
-* `callback (function)` — function without arguments
-
-**Returns:**
-
-* `nil`
-
-```lua
-input.bind(0x41, function()
-    print("Pressed A")
-end)
-```
-
----
-
-### unbind(key)
-
-Removes a key binding.
-
-**Parameters:**
-
-* `key (number)`
-
-**Returns:**
-
-* `nil`
-
-```lua
-input.unbind(0x41)
-```
-
----
-
-## 🪝 Hooks API
+# 🪝 Hooks API
 
 ```lua
 local hooks = _G.Engine.Hooks
 ```
 
-### create(address, signature, callback)
+> **Warning**
+>
+> The function signature must exactly match the original game function.
+> An incorrect signature will almost certainly cause the game to crash.
 
-Creates a detour hook for a function.
+---
 
-**Parameters:**
+## create(address, signature, callback)
 
-* `address (number)` — function address
-* `signature (string)` — C signature with `NAME`
-* `callback (function)` — Lua function (must match the signature)
+Creates a detour hook.
 
-**Returns:**
+### Parameters
 
-* `function | nil` — original function (if successful)
+- `address (number)` — target function address
+- `signature (string)` — C function signature containing the placeholder `NAME`
+- `callback (function)` — Lua callback
 
-**Important:**
+### Returns
 
-* you must call `original(...)` to preserve logic
-* the signature must match exactly
+- `function | nil`
 
 ```lua
 local original
 
-original = hooks.create(0x401000, "int (__cdecl *NAME)(int a)", function(a)
-    print("Called:", a)
-    return original(a)
-end)
+original = hooks.create(
+    0x401000,
+    "int (__cdecl *NAME)(int value)",
+    function(value)
+
+        print("Called:", value)
+
+        return original(value)
+    end
+)
 ```
 
 ---
 
-### create_usercall(address, callback)
+## create_usercall(address, callback)
 
-Hook for non-standard (usercall) functions.
+Creates a bridge for functions that use the non-standard `__usercall` calling convention.
 
-**Parameters:**
+The callback receives six `int32` arguments.
 
-* `address (number)`
-* `callback (function)` — fixed signature:
+### Parameters
 
-```c
-int func(int, int, void*, void*, int, int)
-```
+- `address (number)`
+- `callback (function)`
 
-**Returns:**
+### Returns
 
-* `cdata | nil` — original pointer
+- `cdata | nil`
 
 ```lua
-hooks.create_usercall(0x402000, function(a, b, c, d, e, f)
-    print("Usercall intercepted")
-    return 0
-end)
+hooks.create_usercall(
+    0x402000,
+    function(a, b, c, d, e, f)
+
+        print(a, b, c)
+
+        return 0
+    end
+)
 ```
 
 ---
 
-## 🛡️ VahCrash API
+# 🛡️ VahCrash API
 
 ```lua
 local crash = _G.Engine.VahCrash
 ```
 
-### catch(crash_addr, safe_addr)
+## catch(crash_addr, safe_addr)
 
-Registers a recovery point for crashes.
+Registers a recovery point for a known crash location.
 
-**Parameters:**
+### Parameters
 
-* `crash_addr (number)` — address where the crash occurs
-* `safe_addr (number)` — address to jump to
+- `crash_addr (number)`
+- `safe_addr (number)`
 
-**Returns:**
+### Returns
 
-* `nil`
+- `nil`
 
 ```lua
-crash.catch(0x403000, 0x404000)
+crash.catch(
+    0x403000,
+    0x404000
+)
 ```
 
 ---
 
-## 💡 Full Example
+# 💡 Complete Example
 
 ```lua
-local memory = _G.Engine.Memory
-local input  = _G.Engine.Input
-local hooks  = _G.Engine.Hooks
-local crash  = _G.Engine.VahCrash
+local version = _G.Engine.Version
+local tick    = _G.Engine.Tick
+local memory  = _G.Engine.Memory
+local hooks   = _G.Engine.Hooks
+local crash   = _G.Engine.VahCrash
 
--- bind key F
-input.bind(0x46, function()
-    print("Applying NOP")
-    memory.write_nop(0x401000, 5)
+version.require(0, 2, 1)
+
+tick.add(function()
+    print("Tick")
 end)
 
--- hook
+memory.write_nop(0x401000, 5)
+
 local original
-original = hooks.create(0x401000, "int (__cdecl *NAME)(int)", function(a)
-    print("Hooked:", a)
-    return original(a)
-end)
 
--- crash protection
-crash.catch(0x403000, 0x404000)
+original = hooks.create(
+    0x401000,
+    "int (__cdecl *NAME)(int value)",
+    function(value)
+
+        print("Hook:", value)
+
+        return original(value)
+    end
+)
+
+crash.catch(
+    0x403000,
+    0x404000
+)
 ```

@@ -1,285 +1,443 @@
 ---
-title: "Гайд по RafLoader (lua)"
-description: "Полное руководство по RafLoader: создание Lua-скриптов для Rise and Fall: Civilization at war. Узнайте, как изменять игровую логику в реальном времени, использовать хуки и управлять памятью процесса."
-keywords: "rise and fall, патч, баланс, фикс, установка, гайд"
+title: "Руководство по RafLoader (Lua)"
+description: "Полное руководство по разработке Lua-скриптов для RafLoader. Работа с памятью игры, хуками, тиками, проверкой версии и обработкой крашей."
+keywords: "RafLoader, Lua, Rise and Fall, modding, hooks, memory, scripting"
 ---
-## 📦 Memory API
 
-```lua id="a1m9zf"
+# RafLoader Lua API
+
+RafLoader автоматически загружает все Lua-скрипты из папки `scripts/` после запуска игры.
+
+Структура проекта:
+
+```
+Rise And Fall/
+│
+├── RafLoader.asi
+└── scripts/
+    ├── example.lua
+    ├── balance.lua
+    └── ui.lua
+```
+
+> **Примечание**
+>
+> Файлы, начинающиеся с `_` или `.`, автоматически пропускаются загрузчиком.
+>
+> Например:
+>
+> - `_debug.lua`
+> - `.disabled.lua`
+
+---
+
+# 📌 Глобальные модули
+
+Все API уже доступны через объект `Engine`.
+
+```lua
+local memory  = _G.Engine.Memory
+local hooks   = _G.Engine.Hooks
+local tick    = _G.Engine.Tick
+local version = _G.Engine.Version
+local crash   = _G.Engine.VahCrash
+```
+
+---
+
+# 📝 Логирование
+
+Стандартная функция `print()` переопределена RafLoader.
+
+Любой вывод автоматически попадает в лог загрузчика.
+
+```lua
+print("Hello World")
+print("Player HP:", 250)
+```
+
+---
+
+# 📦 Version API
+
+```lua
+local version = _G.Engine.Version
+```
+
+## get_number()
+
+Возвращает текущую версию RafLoader в числовом формате.
+
+### Возвращает
+
+- `number`
+
+```lua
+local ver = version.get_number()
+```
+
+---
+
+## get_string()
+
+Возвращает строковое представление версии.
+
+### Возвращает
+
+- `string`
+
+```lua
+print(version.get_string())
+-- 0.2.1
+```
+
+---
+
+## check(major, minor, patch)
+
+Проверяет, удовлетворяет ли текущая версия минимальным требованиям.
+
+### Параметры
+
+- `major (number)`
+- `minor (number)`
+- `patch (number)`
+
+### Возвращает
+
+- `boolean`
+
+```lua
+if version.check(0, 2, 1) then
+    print("Version supported")
+end
+```
+
+---
+
+## require(major, minor, patch)
+
+Требует минимальную версию RafLoader.
+
+Если версия ниже требуемой — вызывается ошибка.
+
+### Параметры
+
+- `major (number)`
+- `minor (number)`
+- `patch (number)`
+
+### Возвращает
+
+- `true`
+
+```lua
+version.require(0, 2, 1)
+```
+
+---
+
+# 🔄 Tick API
+
+```lua
+local tick = _G.Engine.Tick
+```
+
+## add(callback)
+
+Добавляет функцию, которая будет вызываться каждый игровой тик.
+
+### Параметры
+
+- `callback (function)`
+
+### Возвращает
+
+- `nil`
+
+```lua
+tick.add(function()
+    print("Tick")
+end)
+```
+
+---
+
+## clear()
+
+Удаляет все зарегистрированные callback-функции.
+
+### Возвращает
+
+- `nil`
+
+```lua
+tick.clear()
+```
+
+---
+
+# 📦 Memory API
+
+```lua
 local memory = _G.Engine.Memory
 ```
 
-### write_nop(address, size)
+> **Важно**
+>
+> Все функции чтения и записи работают напрямую с памятью процесса игры.
+> Использование неверного адреса может привести к аварийному завершению игры.
 
-Забивает участок памяти NOP-инструкциями (0x90).
+---
 
-**Параметры:**
+## write_nop(address, size)
 
-* `address (number)` — адрес в памяти (uintptr_t)
-* `size (number)` — количество байт
+Заполняет участок памяти инструкциями `NOP (0x90)`.
 
-**Возвращает:**
+### Параметры
 
-* `boolean` — успешно ли применен патч
+- `address (number)`
+- `size (number)`
 
-```lua id="y3z2r8"
+### Возвращает
+
+- `boolean`
+
+```lua
 memory.write_nop(0x401000, 5)
 ```
 
 ---
 
-### patch(address, bytes)
+## patch(address, bytes)
 
-Записывает произвольные байты.
+Записывает произвольную последовательность байтов.
 
-**Параметры:**
+### Параметры
 
-* `address (number)` — адрес
-* `bytes (table<number>)` — массив байтов (0–255)
+- `address (number)`
+- `bytes (table<number>)`
 
-**Возвращает:**
+### Возвращает
 
-* `boolean`
+- `boolean`
 
-```lua id="q2xk7s"
-memory.patch(0x401000, {0xEB, 0x01})
+```lua
+memory.patch(0x401000, {
+    0xEB,
+    0x01
+})
 ```
 
 ---
 
-### read_int(address)
+## read_int(address)
 
-Читает `int32`.
+Читает значение `int32`.
 
-**Параметры:**
+### Параметры
 
-* `address (number)`
+- `address (number)`
 
-**Возвращает:**
+### Возвращает
 
-* `number` — int32 значение
+- `number`
 
-```lua id="o9pw4d"
+```lua
 local hp = memory.read_int(0x500000)
-print(hp)
 ```
 
 ---
 
-### read_float(address)
+## read_float(address)
 
-Читает `float`.
+Читает значение `float`.
 
-**Параметры:**
+### Параметры
 
-* `address (number)`
+- `address (number)`
 
-**Возвращает:**
+### Возвращает
 
-* `number` — float значение
+- `number`
 
-```lua id="r5tm3k"
+```lua
 local speed = memory.read_float(0x500100)
-print(speed)
 ```
 
 ---
 
-### write_int(address, value)
+## write_int(address, value)
 
-Записывает `int32`.
+Записывает значение `int32`.
 
-**Параметры:**
+### Параметры
 
-* `address (number)`
-* `value (number)` — int32
+- `address (number)`
+- `value (number)`
 
-**Возвращает:**
+### Возвращает
 
-* `nil`
+- `nil`
 
-```lua id="b8vx0g"
+```lua
 memory.write_int(0x500000, 999)
 ```
 
 ---
 
-### write_float(address, value)
+## write_float(address, value)
 
-Записывает `float`.
+Записывает значение `float`.
 
-**Параметры:**
+### Параметры
 
-* `address (number)`
-* `value (number)` — float
+- `address (number)`
+- `value (number)`
 
-**Возвращает:**
+### Возвращает
 
-* `nil`
+- `nil`
 
-```lua id="l4s7dz"
+```lua
 memory.write_float(0x500100, 3.14)
 ```
 
 ---
 
-## ⌨️ Input API
+# 🪝 Hooks API
 
-```lua id="m0c2pk"
-local input = _G.Engine.Input
-```
-
-### bind(key, callback)
-
-Вызывает функцию при нажатии клавиши (один раз при нажатии, не при удержании).
-
-**Параметры:**
-
-* `key (number)` — virtual-key code (WinAPI), например:
-
-  * `0x41` — A
-  * `0x46` — F
-  * `0x20` — Space
-* `callback (function)` — функция без аргументов
-
-**Возвращает:**
-
-* `nil`
-
-```lua id="t9u1nl"
-input.bind(0x41, function()
-    print("Pressed A")
-end)
-```
-
----
-
-### unbind(key)
-
-Удаляет биндинг.
-
-**Параметры:**
-
-* `key (number)`
-
-**Возвращает:**
-
-* `nil`
-
-```lua id="d2o8fr"
-input.unbind(0x41)
-```
-
----
-
-## 🪝 Hooks API
-
-```lua id="v1x6sh"
+```lua
 local hooks = _G.Engine.Hooks
 ```
 
-### create(address, signature, callback)
+> **Важно**
+>
+> Сигнатура функции должна полностью совпадать с оригинальной функцией игры.
+> Неверная сигнатура почти всегда приводит к крашу.
 
-Создает detour-хук функции.
+---
 
-**Параметры:**
+## create(address, signature, callback)
 
-* `address (number)` — адрес функции
-* `signature (string)` — C-сигнатура с `NAME`
-* `callback (function)` — Lua функция (должна соответствовать сигнатуре)
+Создает detour-хук.
 
-**Возвращает:**
+### Параметры
 
-* `function | nil` — оригинальная функция (если успешно)
+- `address (number)` — адрес функции
+- `signature (string)` — C-сигнатура с заменяемым именем `NAME`
+- `callback (function)` — Lua-функция
 
-**Важно:**
+### Возвращает
 
-* обязательно вызывать `original(...)` чтобы не ломать логику
-* сигнатура должна совпадать
+- `function | nil`
 
-```lua id="g7r3kx"
+```lua
 local original
 
-original = hooks.create(0x401000, "int (__cdecl *NAME)(int a)", function(a)
-    print("Called:", a)
-    return original(a)
-end)
+original = hooks.create(
+    0x401000,
+    "int (__cdecl *NAME)(int value)",
+    function(value)
+
+        print("Called:", value)
+
+        return original(value)
+    end
+)
 ```
 
 ---
 
-### create_usercall(address, callback)
+## create_usercall(address, callback)
 
-Хук для нестандартных (usercall) функций.
+Создает мост (`bridge`) для функций с нестандартным соглашением вызова (`__usercall`).
 
-**Параметры:**
+Callback получает шесть аргументов типа `int32`.
 
-* `address (number)`
-* `callback (function)` — сигнатура фиксирована:
+### Параметры
 
-```c id="g1x2nm"
-int func(int, int, void*, void*, int, int)
-```
+- `address (number)`
+- `callback (function)`
 
-**Возвращает:**
+### Возвращает
 
-* `cdata | nil` — оригинальный указатель
+- `cdata | nil`
 
-```lua id="h8w0qa"
-hooks.create_usercall(0x402000, function(a, b, c, d, e, f)
-    print("Usercall intercepted")
-    return 0
-end)
+```lua
+hooks.create_usercall(
+    0x402000,
+    function(a, b, c, d, e, f)
+
+        print(a, b, c)
+
+        return 0
+    end
+)
 ```
 
 ---
 
-## 🛡️ VahCrash API
+# 🛡️ VahCrash API
 
-```lua id="p3v9ez"
+```lua
 local crash = _G.Engine.VahCrash
 ```
 
-### catch(crash_addr, safe_addr)
+## catch(crash_addr, safe_addr)
 
-Регистрирует точку восстановления при краше.
+Регистрирует точку восстановления после известного краша.
 
-**Параметры:**
+### Параметры
 
-* `crash_addr (number)` — адрес, где происходит краш
-* `safe_addr (number)` — адрес для перехода
+- `crash_addr (number)`
+- `safe_addr (number)`
 
-**Возвращает:**
+### Возвращает
 
-* `nil`
+- `nil`
 
-```lua id="x4b2kp"
-crash.catch(0x403000, 0x404000)
+```lua
+crash.catch(
+    0x403000,
+    0x404000
+)
 ```
 
 ---
 
-## 💡 Полный пример
+# 💡 Полный пример
 
-```lua id="z8k1rq"
-local memory = _G.Engine.Memory
-local input  = _G.Engine.Input
-local hooks  = _G.Engine.Hooks
-local crash  = _G.Engine.VahCrash
+```lua
+local version = _G.Engine.Version
+local tick    = _G.Engine.Tick
+local memory  = _G.Engine.Memory
+local hooks   = _G.Engine.Hooks
+local crash   = _G.Engine.VahCrash
 
--- биндим клавишу F
-input.bind(0x46, function()
-    print("Applying NOP")
-    memory.write_nop(0x401000, 5)
+version.require(0, 2, 1)
+
+tick.add(function()
+    print("Tick")
 end)
 
--- хук
+memory.write_nop(0x401000, 5)
+
 local original
-original = hooks.create(0x401000, "int (__cdecl *NAME)(int)", function(a)
-    print("Hooked:", a)
-    return original(a)
-end)
 
--- защита от краша
-crash.catch(0x403000, 0x404000)
+original = hooks.create(
+    0x401000,
+    "int (__cdecl *NAME)(int value)",
+    function(value)
+
+        print("Hook:", value)
+
+        return original(value)
+    end
+)
+
+crash.catch(
+    0x403000,
+    0x404000
+)
 ```
