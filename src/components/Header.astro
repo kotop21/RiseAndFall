@@ -5,23 +5,23 @@ const { isSticky = false, lang } = Astro.props;
 const t = useTranslations(lang);
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const path = Astro.url.pathname.replace(/\/$/, '');
 
-const isHome = path === `${base}/${lang}`;
-const isLeaderboard = path.startsWith(`${base}/${lang}/leaderboard`);
-const isWiki = path.startsWith(`${base}/${lang}/wiki`);
+const currentPathName = Astro.url.pathname;
 
-let currentPathWithoutLang = Astro.url.pathname;
-
-if (base && currentPathWithoutLang.startsWith(base)) {
-    currentPathWithoutLang = currentPathWithoutLang.slice(base.length);
+let pathWithoutBase = currentPathName;
+if (base && pathWithoutBase.startsWith(base)) {
+  pathWithoutBase = pathWithoutBase.slice(base.length);
 }
 
-currentPathWithoutLang = currentPathWithoutLang.replace(new RegExp(`^/${lang}`), '');
+let pathWithoutLang = pathWithoutBase.replace(new RegExp(`^/${lang}`), '');
 
-if (!currentPathWithoutLang.startsWith('/')) {
-    currentPathWithoutLang = '/' + currentPathWithoutLang;
+if (!pathWithoutLang.startsWith('/')) {
+  pathWithoutLang = '/' + pathWithoutLang;
 }
+
+const isHome = pathWithoutBase === `/${lang}` || pathWithoutBase === `/${lang}/`;
+const isLeaderboard = pathWithoutBase.startsWith(`/${lang}/leaderboard`);
+const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
 ---
 
 <header class:list={["header-wrapper", { sticky: isSticky }]}>
@@ -34,9 +34,9 @@ if (!currentPathWithoutLang.startsWith('/')) {
         </nav>
 
         <div class="lang-switcher">
-            {Object.entries(languages).map(([key, label]) => (
+            {Object.entries(languages).map(([key]) => (
                 <a 
-                    href={`${base}/${key}${currentPathWithoutLang}`} 
+                    href={`${base}/${key}${pathWithoutLang}`} 
                     class={lang === key ? "active-lang" : ""}
                 >
                     {key.toUpperCase()}
@@ -45,62 +45,3 @@ if (!currentPathWithoutLang.startsWith('/')) {
         </div>
     </div>
 </header>
-
-<style>
-.header-wrapper { width: 100%; z-index: 1000; }
-.sticky {
-    position: sticky; top: 0;
-    background: rgba(15, 15, 15, 0.7);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.topbar {
-    display: grid; 
-    grid-template-columns: 1fr auto 1fr; 
-    align-items: center;
-    padding: 0.5rem 2rem; 
-    max-width: 1500px; 
-    margin: 0 auto; 
-    width: 100%;
-}
-
-.logo { 
-    justify-self: start;
-    font-size: 1.4rem; 
-    font-weight: bold; 
-    color: var(--fg); 
-    letter-spacing: 0.05em; 
-}
-.logo span { color: var(--accent); }
-
-.nav-links { 
-    justify-self: center;
-    display: flex; 
-    gap: 1.5rem; 
-}
-.nav-links a { border-bottom: 1px solid transparent; }
-.nav-links a.active { color: var(--accent); border-color: var(--accent); opacity: 1; }
-
-.lang-switcher { 
-    justify-self: end;
-    display: flex; 
-    gap: 0.8rem; 
-    font-size: 0.9rem; 
-}
-.lang-switcher a { color: #666; transition: 0.2s; border: none; }
-.lang-switcher a:hover { color: var(--fg); }
-.lang-switcher a.active-lang { color: var(--accent); font-weight: bold; }
-
-@media (max-width: 768px) {
-    .logo { display: none; }
-    .topbar { 
-        display: flex;
-        flex-direction: column; 
-        gap: 1rem; 
-        padding: 1rem; 
-    }
-    .nav-links { flex-wrap: wrap; justify-content: center; gap: 1rem; }
-    .lang-switcher { margin-top: 0.5rem; justify-self: center; align-self: center; }
-}
-</style>
