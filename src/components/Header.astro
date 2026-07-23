@@ -11,7 +11,17 @@ const isHome = path === `${base}/${lang}`;
 const isLeaderboard = path.startsWith(`${base}/${lang}/leaderboard`);
 const isWiki = path.startsWith(`${base}/${lang}/wiki`);
 
-const currentPathWithoutLang = Astro.url.pathname.replace(new RegExp(`^${base}/${lang}`), '') || '/';
+let currentPathWithoutLang = Astro.url.pathname;
+
+if (base && currentPathWithoutLang.startsWith(base)) {
+    currentPathWithoutLang = currentPathWithoutLang.slice(base.length);
+}
+
+currentPathWithoutLang = currentPathWithoutLang.replace(new RegExp(`^/${lang}`), '');
+
+if (!currentPathWithoutLang.startsWith('/')) {
+    currentPathWithoutLang = '/' + currentPathWithoutLang;
+}
 ---
 
 <header class:list={["header-wrapper", { sticky: isSticky }]}>
