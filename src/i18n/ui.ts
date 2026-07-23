@@ -1,4 +1,3 @@
-// src/i18n/ui.ts
 export const languages = {
   ru: 'Русский',
   en: 'English',
@@ -26,7 +25,9 @@ export const ui = {
 } as const;
 
 export function useTranslations(lang: keyof typeof ui) {
+  const validLang = (lang && ui[lang]) ? lang : defaultLang;
+
   return function t(key: keyof typeof ui[typeof defaultLang]) {
-    return ui[lang][key] || ui[defaultLang][key];
+    return ui[validLang][key] || ui[defaultLang][key];
   }
 }
