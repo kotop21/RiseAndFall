@@ -76,7 +76,7 @@ const urlEn = `${siteUrl}${base}/en${pathWithoutLang}`;
         )}
     </head>
     <body>
-        <Header isSticky={true} lang={lang} />
+        <Header isSticky="{true}" lang="{lang}"/>
 
         <div class="wiki-layout">
             <aside class="left-sidebar">
@@ -111,7 +111,7 @@ const urlEn = `${siteUrl}${base}/en${pathWithoutLang}`;
 
             <main class="markdown-container">
                 <article class="markdown-content">
-                    <Content />
+                    <Content/>
                 </article>
             </main>
         </div>
@@ -120,17 +120,40 @@ const urlEn = `${siteUrl}${base}/en${pathWithoutLang}`;
 
 <style>
     .wiki-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr) 280px; grid-template-areas: "left main right"; gap: 40px; max-width: 1600px; margin: 0 auto; padding: 40px 20px; }
-    .left-sidebar { grid-area: left; } .markdown-container { grid-area: main; min-width: 0; overflow: hidden; } .right-sidebar { grid-area: right; }
-    .sidebar-sticky-wrapper { position: sticky; top: 100px; max-height: calc(100vh - 120px); overflow-y: auto; }
+    .left-sidebar { grid-area: left; } 
+    .markdown-container { grid-area: main; min-width: 0; overflow: hidden; } 
+    .right-sidebar { grid-area: right; }
+    
+    .sidebar-sticky-wrapper { position: sticky; top: 100px; max-height: calc(100vh - 120px); overflow-y: auto; overscroll-behavior: contain; }
     .doc-links { display: flex; flex-direction: column; gap: 12px; }
     .doc-links a { color: #A1A1AA; font-size: 0.95rem; }
     .doc-links a:hover, .doc-links a.active { color: var(--accent); }
+    
     .markdown-content { max-width: 100%; }
     .markdown-content :global(h1), .markdown-content :global(h2), .markdown-content :global(h3), .markdown-content :global(h4), .markdown-content :global(h5), .markdown-content :global(h6) { scroll-margin-top: 120px; }
-    .toc-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; position: sticky; top: 100px; }
+    
+    .toc-box { 
+        background: rgba(255,255,255,0.03); 
+        border: 1px solid rgba(255,255,255,0.1); 
+        padding: 20px; 
+        border-radius: 12px; 
+        position: sticky; 
+        top: 100px; 
+        max-height: calc(100vh - 120px); 
+        overflow-y: auto; 
+        overscroll-behavior: contain; 
+    }
+    
     .toc-links { display: flex; flex-direction: column; gap: 10px; }
     .toc-links a { color: #A1A1AA; font-size: 0.85rem; }
-    .toc-links a:hover { color: var(--accent); } .depth-3 { margin-left: 15px; }
+    .toc-links a:hover { color: var(--accent); } 
+    .depth-3 { margin-left: 15px; }
     a:hover { border-color: var(--accent); }
-    @media (max-width: 1200px) { .wiki-layout { grid-template-columns: 1fr; grid-template-areas: "main"; display: flex; flex-direction: column; } .left-sidebar { display: none; } .right-sidebar { display: block; order: -1; width: 100%; } .toc-box { position: static; margin-bottom: 20px; } }
+    
+    @media (max-width: 1200px) { 
+        .wiki-layout { grid-template-columns: 1fr; grid-template-areas: "main"; display: flex; flex-direction: column; } 
+        .left-sidebar { display: none; } 
+        .right-sidebar { display: block; order: -1; width: 100%; } 
+        .toc-box { position: static; margin-bottom: 20px; max-height: none; overflow-y: visible; } 
+    }
 </style>
