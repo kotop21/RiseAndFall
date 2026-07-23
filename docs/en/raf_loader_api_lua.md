@@ -1,5 +1,5 @@
 ---
-title: "RafLoader Lua Guide"
+title: "RafLoader Guide (Lua)"
 description: "Complete guide to developing Lua scripts for RafLoader. Learn how to work with game memory, hooks, tick callbacks, version checking, and crash recovery."
 keywords: "RafLoader, Lua, Rise and Fall, modding, hooks, memory, scripting"
 ---
