@@ -15,6 +15,11 @@ export default defineConfig({
     syntaxHighlight: 'prism'
   },
 
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'hover'
+  },
+
   integrations: [
     sitemap({
       i18n: {

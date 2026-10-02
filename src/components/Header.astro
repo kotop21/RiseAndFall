@@ -28,9 +28,9 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
     <div class="topbar">
         <div class="logo">Rise And Fall <span>Community</span></div>
         <nav class="nav-links">
-            <a href={`${base}/${lang}/`} class={isHome ? "active" : ""}>{t('nav.home')}</a>
-            <a href={`${base}/${lang}/leaderboard/`} class={isLeaderboard ? "active" : ""}>{t('nav.leaderboard')}</a>
-            <a href={`${base}/${lang}/wiki/`} class={isWiki ? "active" : ""}>{t('nav.wiki')}</a>
+            <a href={`${base}/${lang}/`} class={isHome ? "active" : ""} data-astro-prefetch="viewport">{t('nav.home')}</a>
+            <a href={`${base}/${lang}/leaderboard/`} class={isLeaderboard ? "active" : ""} data-astro-prefetch="viewport">{t('nav.leaderboard')}</a>
+            <a href={`${base}/${lang}/wiki/`} class={isWiki ? "active" : ""} data-astro-prefetch="viewport">{t('nav.wiki')}</a>
         </nav>
 
         <div class="lang-switcher">
