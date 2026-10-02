@@ -4,6 +4,10 @@
     --accent: #C5A059;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 html, body {
     background: var(--bg);
     color: var(--fg);
@@ -12,6 +16,54 @@ html, body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+}
+
+::view-transition-group(site-header) {
+    animation: none;
+}
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+@keyframes contentExit {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.995);
+        filter: blur(2px);
+    }
+}
+
+@keyframes contentEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.995);
+        filter: blur(3px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
+}
+
+::view-transition-old(page-content) {
+    animation: 140ms cubic-bezier(0.4, 0, 1, 1) both contentExit;
+}
+
+::view-transition-new(page-content) {
+    animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both contentEnter;
 }
 
 * {

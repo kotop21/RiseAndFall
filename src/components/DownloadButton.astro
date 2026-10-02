@@ -36,15 +36,11 @@ const fallbackUrl = 'https://github.com/kotop21/RiseAndFall---launcher/releases/
 
 <script>
   import { initLauncherDownload } from '../utils/launcher';
-  initLauncherDownload();
-
-  const modal = document.getElementById('thanks-modal');
-  const downloadBtns = document.querySelectorAll('[data-download-launcher]');
-  const skipBtn = modal?.querySelector('.thanks-skip-btn');
 
   let hideTimer: any = null;
 
   function showModal() {
+    const modal = document.getElementById('thanks-modal');
     if (!modal) return;
     modal.classList.add('is-visible');
     modal.setAttribute('aria-hidden', 'false');
@@ -54,6 +50,7 @@ const fallbackUrl = 'https://github.com/kotop21/RiseAndFall---launcher/releases/
   }
 
   function hideModal() {
+    const modal = document.getElementById('thanks-modal');
     if (!modal) return;
     modal.classList.remove('is-visible');
     modal.setAttribute('aria-hidden', 'true');
@@ -63,34 +60,47 @@ const fallbackUrl = 'https://github.com/kotop21/RiseAndFall---launcher/releases/
     }
   }
 
-  downloadBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      showModal();
+  function initDownloadModal() {
+    initLauncherDownload();
+
+    const modal = document.getElementById('thanks-modal');
+    if (!modal) return;
+
+    const downloadBtns = document.querySelectorAll('[data-download-launcher]');
+    const skipBtn = modal.querySelector('.thanks-skip-btn');
+
+    downloadBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        showModal();
+      });
     });
-  });
 
-  skipBtn?.addEventListener('click', hideModal);
+    skipBtn?.addEventListener('click', hideModal);
 
-  modal?.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      hideModal();
-    }
-  });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        hideModal();
+      }
+    });
+  }
 
   document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('thanks-modal');
     if (e.key === 'Escape' && modal?.classList.contains('is-visible')) {
       hideModal();
     }
   });
+
+  document.addEventListener('astro:page-load', initDownloadModal);
 </script>
 
 <style>
   .thanks-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.85);
+    /* backdrop-filter: blur(20px); */
+    /* -webkit-backdrop-filter: blur(20px); */
     display: grid;
     place-items: center;
     z-index: 99999;

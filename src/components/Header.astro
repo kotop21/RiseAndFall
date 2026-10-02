@@ -24,7 +24,7 @@ const isLeaderboard = pathWithoutBase.startsWith(`/${lang}/leaderboard`);
 const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
 ---
 
-<header class:list={["header-wrapper", { sticky: isSticky }]}>
+<header class:list={["header-wrapper", { sticky: isSticky }]} transition:name="site-header">
     <div class="topbar">
         <div class="logo">Rise And Fall <span>Community</span></div>
         <nav class="nav-links">

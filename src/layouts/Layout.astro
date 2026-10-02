@@ -1,6 +1,7 @@
 ---
 import '@styles/global.css';
 import Header from '@components/Header.astro';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
     title?: string;
@@ -79,10 +80,13 @@ const jsonLd = {
 
         <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
+        <ClientRouter />
         <slot name="head" />
     </head>
     <body>
         <Header isSticky={isStickyHeader} lang={lang} />
-        <slot />
+        <div id="page-content" transition:name="page-content">
+            <slot />
+        </div>
     </body>
 </html>
