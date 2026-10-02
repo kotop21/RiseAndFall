@@ -15,6 +15,7 @@
     "dev": "astro dev",
     "build": "astro build && bundlesize",
     "preview": "astro preview",
+    "start": "bun run build && bun run preview",
     "astro": "astro"
   },
   "dependencies": {
