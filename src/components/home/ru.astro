@@ -6,10 +6,25 @@ import DownloadButton from '@components/DownloadButton.astro';
     <p>Единая точка входа в мир Rise & Fall. Официальный хаб сообщества: актуальная база знаний, глобальный рейтинг игроков и пошаговые инструкции для новичков.</p>
     
     <div class="hero-actions">
-        <DownloadButton text="Скачать лаунчер" />
+        <DownloadButton
+            text="Скачать лаунчер"
+            thanksTitle="Спасибо за скачивание! ❤️"
+            thanksDesc="Загрузка лаунчера началась. До встречи на полях сражений Rise and Fall!"
+            thanksSkip="Пропустить"
+        />
         <nav class="secondary-nav">
-            <a href="https://github.com/kotop21/RiseAndFall" target="_blank">GitHub</a>
-            <a href="https://discord.gg/EKTAsxemqf" target="_blank">Discord</a>
+            <div class="tooltip-wrapper">
+                <a href="https://github.com/kotop21/RiseAndFall" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <span class="tooltip-box">Исходный код сайта и лаунчера полностью открыт. Изучайте, контрибьютьте и создавайте своё!</span>
+            </div>
+            <div class="tooltip-wrapper">
+                <a href="https://discord.gg/EKTAsxemqf" target="_blank" rel="noopener noreferrer">Discord</a>
+                <span class="tooltip-box">Главное сообщество Rise & Fall: 500+ игроков, турниры, дуэли и помощь новичкам!</span>
+            </div>
+            <div class="tooltip-wrapper">
+                <a href="https://ko-fi.com/kotop21" target="_blank" rel="noopener noreferrer" class="donate-btn">Донат</a>
+                <span class="tooltip-box">Держится на личном железе и времени. Спасибо за поддержку!</span>
+            </div>
         </nav>
     </div>
 </header>
@@ -18,21 +33,48 @@ import DownloadButton from '@components/DownloadButton.astro';
     <section>
         <h2>🎮 Как начать играть</h2>
         <div class="step-list">
-            <div class="step"><div class="step-num">01</div><div class="step-text">Скачайте лаунчер с GitHub.</div></div>
-            <div class="step"><div class="step-num">02</div><div class="step-text">В лаунчере скачайте игру + установите <strong>фикс баланса</strong>.</div></div>
-            <div class="step"><div class="step-num">03</div><div class="step-text">Установите <strong>dgVoodoo</strong> (есть в лаунчере).</div></div>
-            <div class="step"><div class="step-num">04</div><div class="step-text">Нажмите <code>Подключиться к сети</code>.</div></div>
+            <div class="step">
+                <div class="step-num">01</div>
+                <div class="step-text"><strong>Скачайте лаунчер</strong> — нажмите кнопку <code>Скачать лаунчер</code> выше и запустите его.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">02</div>
+                <div class="step-text"><strong>Выберите вариант установки</strong> — при первом запуске в приветствии выберите <em>«Установить новую»</em> (или укажите уже имеющуюся игру) и выберите язык (Russian / English).</div>
+            </div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <div class="step-text"><strong>Всё настроится само</strong> — лаунчер автоматически скачает игру, языковой пакет и встроенные обязательные моды (фикс баланса и скоростную передачу карт в лобби за доли секунды вместо минут).</div>
+            </div>
+            <div class="step">
+                <div class="step-num">04</div>
+                <div class="step-text"><strong>Запустите игру</strong> — нажмите <code>Запустить игру</code> и вступайте в бой!</div>
+            </div>
         </div>
     </section>
     <section>
         <h2>🏆 Рейтинговые игры (1х1)</h2>
-        <div class="alert" style="padding: 0.9rem 1.5rem;">Запись игры строго обязательна для обоих игроков.</div>
+        <div class="alert" style="padding: 0.9rem 1.5rem;">⚠️ <strong>Важно:</strong> Запись экрана (видео матча) строго обязательна для обоих игроков для подтверждения победы.</div>
         <div class="step-list">
-            <div class="step"><div class="step-num">01</div><div class="step-text">Зайдите в Discord.</div></div>
-            <div class="step"><div class="step-num">02</div><div class="step-text">Регистрация: <code>/register [ваш_ник]</code></div></div>
-            <div class="step"><div class="step-num">03</div><div class="step-text">Вызов: <code>/duel @ник</code></div></div>
-            <div class="step"><div class="step-num">04</div><div class="step-text">Игра до 2 побед.</div></div>
-            <div class="step"><div class="step-num">05</div><div class="step-text">Отправьте видео через <code>/report</code>.</div></div>
+            <div class="step">
+                <div class="step-num">01</div>
+                <div class="step-text"><strong>Зайдите в Discord</strong> — присоединяйтесь к нашему <a href="https://discord.gg/EKTAsxemqf" target="_blank" style="color: var(--accent); border-bottom: 1px dashed var(--accent);">серверу сообщества</a>.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">02</div>
+                <div class="step-text"><strong>Регистрация</strong> — в чате бота напишите команду: <code>/register [ваш_ник]</code>.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <div class="step-text"><strong>Вызов на дуэль</strong> — найдите соперника и вызовите его командой: <code>/duel @ник</code>.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">04</div>
+                <div class="step-text"><strong>Матч до 2 побед</strong> — сыграйте серию игр (побеждает тот, кто первым выиграет 2 раунда).</div>
+            </div>
+            <div class="step">
+                <div class="step-num">05</div>
+                <div class="step-text"><strong>Отчет о победе</strong> — отправьте видеозапись через команду <code>/report</code>, и ваш рейтинг в таблице лидеров обновится.</div>
+            </div>
         </div>
     </section>
 </div>

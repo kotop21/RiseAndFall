@@ -6,10 +6,25 @@ import DownloadButton from '@components/DownloadButton.astro';
     <p>The single entry point to the world of Rise & Fall. Official community hub: up-to-date knowledge base, global player rankings, and step-by-step guides.</p>
     
     <div class="hero-actions">
-        <DownloadButton text="Download Launcher" />
+        <DownloadButton
+            text="Download Launcher"
+            thanksTitle="Thank you for downloading! ❤️"
+            thanksDesc="Launcher download has started. See you on the battlefields of Rise and Fall!"
+            thanksSkip="Skip"
+        />
         <nav class="secondary-nav">
-            <a href="https://github.com/kotop21/RiseAndFall" target="_blank">GitHub</a>
-            <a href="https://discord.gg/EKTAsxemqf" target="_blank">Discord</a>
+            <div class="tooltip-wrapper">
+                <a href="https://github.com/kotop21/RiseAndFall" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <span class="tooltip-box">Website and launcher are 100% open source. Explore the code, contribute, and build with us!</span>
+            </div>
+            <div class="tooltip-wrapper">
+                <a href="https://discord.gg/EKTAsxemqf" target="_blank" rel="noopener noreferrer">Discord</a>
+                <span class="tooltip-box">The premier Rise & Fall community: 500+ players, matchmaking, tournaments, and 24/7 help!</span>
+            </div>
+            <div class="tooltip-wrapper">
+                <a href="https://ko-fi.com/kotop21" target="_blank" rel="noopener noreferrer" class="donate-btn">Donate</a>
+                <span class="tooltip-box">Runs on personal hardware & time. Thanks for supporting!</span>
+            </div>
         </nav>
     </div>
 </header>
@@ -18,21 +33,48 @@ import DownloadButton from '@components/DownloadButton.astro';
     <section>
         <h2>🎮 How to start playing</h2>
         <div class="step-list">
-            <div class="step"><div class="step-num">01</div><div class="step-text">Download the launcher from GitHub.</div></div>
-            <div class="step"><div class="step-num">02</div><div class="step-text">Download the game via launcher + install the <strong>balance fix</strong>.</div></div>
-            <div class="step"><div class="step-num">03</div><div class="step-text">Install <strong>dgVoodoo</strong> (included in the launcher).</div></div>
-            <div class="step"><div class="step-num">04</div><div class="step-text">Click <code>Connect to Network</code>.</div></div>
+            <div class="step">
+                <div class="step-num">01</div>
+                <div class="step-text"><strong>Download launcher</strong> — click the <code>Download Launcher</code> button above and run it.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">02</div>
+                <div class="step-text"><strong>Choose installation option</strong> — on first launch, select <em>“Install New”</em> (or select an existing game folder) and choose your language (English / Russian).</div>
+            </div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <div class="step-text"><strong>Automatic setup</strong> — the launcher automatically downloads the clean game, language pack, and essential mods (balance fix and ultra-fast lobby map transfer in fractions of a second).</div>
+            </div>
+            <div class="step">
+                <div class="step-num">04</div>
+                <div class="step-text"><strong>Launch game</strong> — click <code>Start Game</code> and join the battle!</div>
+            </div>
         </div>
     </section>
     <section>
         <h2>🏆 Ranked games (1v1)</h2>
-        <div class="alert" style="padding: 0.9rem 1.5rem;">Recording the match is strictly mandatory for both players.</div>
+        <div class="alert" style="padding: 0.9rem 1.5rem;">⚠️ <strong>Important:</strong> Match screen recording is strictly mandatory for both players to confirm victory.</div>
         <div class="step-list">
-            <div class="step"><div class="step-num">01</div><div class="step-text">Join our Discord.</div></div>
-            <div class="step"><div class="step-num">02</div><div class="step-text">Register: <code>/register [your_nickname]</code></div></div>
-            <div class="step"><div class="step-num">03</div><div class="step-text">Challenge: <code>/duel @nickname</code></div></div>
-            <div class="step"><div class="step-num">04</div><div class="step-text">Best of 3 matches.</div></div>
-            <div class="step"><div class="step-num">05</div><div class="step-text">Submit video via <code>/report</code>.</div></div>
+            <div class="step">
+                <div class="step-num">01</div>
+                <div class="step-text"><strong>Join Discord</strong> — hop into our <a href="https://discord.gg/EKTAsxemqf" target="_blank" style="color: var(--accent); border-bottom: 1px dashed var(--accent);">community server</a>.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">02</div>
+                <div class="step-text"><strong>Registration</strong> — in bot chat type: <code>/register [your_nickname]</code>.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <div class="step-text"><strong>Challenge duel</strong> — find an opponent and challenge them: <code>/duel @nickname</code>.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">04</div>
+                <div class="step-text"><strong>Best of 3</strong> — play match series (first to win 2 rounds wins the match).</div>
+            </div>
+            <div class="step">
+                <div class="step-num">05</div>
+                <div class="step-text"><strong>Submit report</strong> — send the video recording via <code>/report</code>, and your rank in leaderboard updates automatically.</div>
+            </div>
         </div>
     </section>
 </div>
