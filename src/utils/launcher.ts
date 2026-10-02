@@ -95,10 +95,9 @@ export function findInstallerAsset(
   return candidates[0];
 }
 
-const GITHUB_REPO = 'kotop21/RiseAndFall---launcher';
-const API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
-const CACHE_KEY = 'raf_launcher_download_v1';
-const CACHE_TTL_MS = 10 * 60 * 1000;
+const INFO_URL = 'https://vds-proxy-raf.raf-network.workers.dev/launcher/info';
+const CACHE_KEY = 'raf_launcher_download_v2';
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 export function initLauncherDownload() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -106,9 +105,9 @@ export function initLauncherDownload() {
   const buttons = document.querySelectorAll<HTMLAnchorElement>('[data-download-launcher]');
   if (!buttons.length) return;
 
-  function updateButtons(downloadUrl: string, fileName?: string, tag?: string) {
+  function updateButtons(downloadUrl?: string, fileName?: string, tag?: string) {
     buttons.forEach(btn => {
-      btn.href = downloadUrl;
+      if (downloadUrl) btn.href = downloadUrl;
       if (fileName) {
         btn.setAttribute('download', fileName);
         btn.setAttribute('title', `Скачать ${fileName}${tag ? ` (${tag})` : ''}`);
@@ -116,75 +115,34 @@ export function initLauncherDownload() {
     });
   }
 
-  let isCachedFresh = false;
   try {
     const cachedRaw = localStorage.getItem(CACHE_KEY);
     if (cachedRaw) {
       const cached = JSON.parse(cachedRaw);
       if (cached && cached.url && (Date.now() - (cached.timestamp || 0) < CACHE_TTL_MS)) {
         updateButtons(cached.url, cached.name, cached.tag);
-        isCachedFresh = true;
+        return;
       }
     }
   } catch (_) {}
 
-  let fetchPromise: Promise<string | null> | null = null;
-
-  async function fetchLatest(): Promise<string | null> {
-    try {
-      const response = await fetch(API_URL, {
-        headers: { 'Accept': 'application/vnd.github.v3+json' }
-      });
-      if (!response.ok) return null;
-      const releaseData = await response.json();
-
-      const installer = findInstallerAsset(releaseData.assets, PORTABLE_KEYWORDS);
-      if (installer) {
-        updateButtons(installer.browser_download_url, installer.name, releaseData.tag_name);
-
+  fetch(INFO_URL)
+    .then(res => (res.ok ? res.json() : null))
+    .then(data => {
+      if (data && data.url) {
+        updateButtons(data.url, data.name, data.tag);
         try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            url: installer.browser_download_url,
-            name: installer.name,
-            tag: releaseData.tag_name,
-            timestamp: Date.now()
-          }));
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              url: data.url,
+              name: data.name,
+              tag: data.tag,
+              timestamp: Date.now()
+            })
+          );
         } catch (_) {}
-
-        return installer.browser_download_url;
       }
-    } catch (e) {
-      console.warn('Не удалось загрузить данные о последнем релизе:', e);
-    }
-    return null;
-  }
-
-  if (!isCachedFresh) {
-    fetchPromise = fetchLatest();
-  }
-
-  buttons.forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const href = btn.getAttribute('href') || '';
-      if (href.endsWith('.zip') || href.endsWith('.exe') || href.endsWith('.msi')) {
-        return;
-      }
-
-      if (fetchPromise) {
-        e.preventDefault();
-        try {
-          const directUrl = await Promise.race([
-            fetchPromise,
-            new Promise<null>(resolve => setTimeout(() => resolve(null), 1200))
-          ]);
-          if (directUrl) {
-            window.location.href = directUrl;
-            return;
-          }
-        } catch (_) {}
-
-        window.open(btn.href, '_blank', 'noopener,noreferrer');
-      }
-    });
-  });
+    })
+    .catch(() => {});
 }
