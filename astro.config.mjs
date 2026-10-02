@@ -12,5 +12,16 @@ export default defineConfig({
     inlineStylesheets: 'never'
   },
 
-  integrations: [sitemap()]
+  integrations: [
+    sitemap({
+      i18n: {
+        defaultLocale: 'en',
+        locales: {
+          en: 'en',
+          ru: 'ru',
+        },
+      },
+      filter: (page) => page !== 'https://kotop21.github.io/RiseAndFall/',
+    })
+  ]
 });

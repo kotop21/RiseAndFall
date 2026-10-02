@@ -27,6 +27,21 @@ let pathWithoutLang = Astro.url.pathname.replace(new RegExp(`^${base}/(en|ru)`),
 if (!pathWithoutLang.endsWith('/')) pathWithoutLang += '/';
 const urlRu = `${siteUrl}${base}/ru${pathWithoutLang}`;
 const urlEn = `${siteUrl}${base}/en${pathWithoutLang}`;
+const previewImage = `${siteUrl}${base}/preview.png`;
+
+const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": ogType === 'article' ? 'Article' : 'WebPage',
+    "name": title,
+    ...(description ? { "description": description } : {}),
+    "url": canonicalURL,
+    "inLanguage": lang,
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "Rise and Fall: Civilizations at War",
+        "url": `${siteUrl}${base}/${lang}/`
+    }
+};
 ---
 
 <!doctype html>
@@ -37,16 +52,36 @@ const urlEn = `${siteUrl}${base}/en${pathWithoutLang}`;
         <title>{title}</title>
         {description && <meta name="description" content={description} />}
         {keywords && <meta name="keywords" content={keywords} />}
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta name="google-site-verification" content="google90f0b83446a4d2c3" />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:site_name" content="Rise and Fall: Civilizations at War" />
         <meta property="og:title" content={title} />
         {description && <meta property="og:description" content={description} />}
         <meta property="og:type" content={ogType} />
         <meta property="og:url" content={canonicalURL} />
+        <meta property="og:image" content={previewImage} />
+        <meta property="og:image:alt" content={title} />
+        <meta property="og:locale" content={lang === 'ru' ? 'ru_RU' : 'en_US'} />
+        <meta property="og:locale:alternate" content={lang === 'ru' ? 'en_US' : 'ru_RU'} />
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        {description && <meta name="twitter:description" content={description} />}
+        <meta name="twitter:image" content={previewImage} />
+
         <link rel="canonical" href={canonicalURL} />
         <link rel="icon" type="image/png" href={`${base}/favicon.png`} />
         
         <link rel="alternate" hreflang="ru" href={urlRu} />
         <link rel="alternate" hreflang="en" href={urlEn} />
         <link rel="alternate" hreflang="x-default" href={urlEn} />
+
+        <!-- Structured Data -->
+        <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
         <slot name="head" />
     </head>
     <body>

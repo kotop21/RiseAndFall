@@ -19,9 +19,13 @@ const allPages = langFiles.map((f: any) => {
 
 const readArticle = lang === 'ru' ? 'Читать статью' : 'Read the article';
 const pageTitle = lang === 'ru' ? 'Вики | Rise And Fall: Civilization at War' : 'Wiki | Rise And Fall: Civilization at War';
+const pageDesc = lang === 'ru'
+    ? 'База знаний сообщества Rise and Fall: Civilizations at War — гайды, документация API, установка карт и модификаций.'
+    : 'Knowledge base for the Rise and Fall: Civilizations at War community — guides, API documentation, maps, and mod installation.';
+const pageKeywords = 'rise and fall, wiki, вики, гайды, maps, карты, rafloader, api, modding, documentation';
 ---
 
-<Layout title={pageTitle} lang={lang}>
+<Layout title={pageTitle} description={pageDesc} keywords={pageKeywords} lang={lang}>
     <main class="wiki-index">
         <div class="card-grid">
             {allPages.map(page => (

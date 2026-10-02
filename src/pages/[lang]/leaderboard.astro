@@ -18,9 +18,12 @@ const pageDesc = lang === 'ru'
 const loadingText = lang === 'ru' ? 'Загрузка рейтинга...' : 'Loading leaderboard...';
 const errorText = lang === 'ru' ? 'Ошибка подключения к серверу рейтинга.' : 'Failed to connect to the leaderboard server.';
 const nothing = lang === 'ru' ? 'Пусто' : 'Empty';
+const pageKeywords = lang === 'ru'
+    ? 'rise and fall, рейтинг, лидерборд, 1v1, дуэли, игроки, статистика, civilizations at war'
+    : 'rise and fall, leaderboard, ranking, 1v1, duels, players, stats, civilizations at war';
 ---
 
-<Layout title={pageTitle} description={pageDesc} lang={lang}>
+<Layout title={pageTitle} description={pageDesc} keywords={pageKeywords} lang={lang}>
     <main>
             <div class="tiers-grid" id="leaderboard-container">
                 <div style="grid-column: 1 / -1; text-align: center; color: var(--fg);">
