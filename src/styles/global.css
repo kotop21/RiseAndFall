@@ -18,6 +18,14 @@ html, body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+#page-content {
+    view-transition-name: page-content;
+}
+
+.header-wrapper {
+    view-transition-name: site-header;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
     animation: none;
@@ -122,3 +130,36 @@ code {
         font-size: 16px;
     }
 }
+
+.markdown-content pre {
+    background: #0d0d0d !important;
+    padding: 0;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.markdown-content pre code {
+    display: block;
+    padding: 1.5rem;
+    line-height: 1.6;
+    background: transparent !important;
+    color: #E1E4E8;
+    font-size: 0.9rem;
+    border: none;
+}
+
+.markdown-content code {
+    word-break: break-word;
+}
+
+.token.comment { color: #6A737D; font-style: italic; }
+.token.keyword { color: #F97583; font-weight: 600; }
+.token.function { color: #B392F0; }
+.token.string { color: #9ECBFF; }
+.token.number, .token.boolean { color: #79B8FF; }
+.token.class-name { color: #FFAB70; }
+.token.punctuation, .token.operator { color: #E1E4E8; }
+.token.property, .token.macro { color: #E1E4E8; }
+

@@ -16,19 +16,17 @@ export async function getStaticPaths() {
 
         for (const file of langDocs) {
             const slug = (file as any).file.split('/').pop().replace('.md', '').toLowerCase();
-            const rawText = (file as any).rawContent ? (file as any).rawContent() : '';
-            const hasCode = rawText.includes('```') || rawText.includes('`');
 
             paths.push({
                 params: { lang, slug },
-                props: { currentFile: file, allPages, hasCode }
+                props: { currentFile: file, allPages }
             });
         }
     }
     return paths;
 }
 
-const { currentFile, allPages, hasCode } = Astro.props;
+const { currentFile, allPages } = Astro.props;
 const { lang } = Astro.params;
 const { Content, frontmatter, getHeadings } = currentFile;
 const headings = getHeadings();
@@ -46,14 +44,6 @@ const currentSlug = Astro.params.slug.toLowerCase();
     lang={lang}
     isStickyHeader={true}
 >
-    {hasCode && (
-        <style slot="head" is:inline>
-            .markdown-content pre { background: #0d0d0d !important; padding: 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; margin: 1.5rem 0; }
-            .markdown-content pre code { display: block; padding: 1.5rem; line-height: 1.6; background: transparent !important; }
-            .markdown-content code { word-break: break-word; }
-        </style>
-    )}
-
     <div class="wiki-layout">
         <aside class="left-sidebar">
             <div class="sidebar-sticky-wrapper">

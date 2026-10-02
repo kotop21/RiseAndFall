@@ -11,6 +11,10 @@ export default defineConfig({
     inlineStylesheets: 'never'
   },
 
+  markdown: {
+    syntaxHighlight: 'prism'
+  },
+
   integrations: [
     sitemap({
       i18n: {
