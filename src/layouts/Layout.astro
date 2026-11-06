@@ -18,7 +18,7 @@ const {
     keywords,
     ogType = 'website',
     lang = Astro.params.lang || 'en',
-    isStickyHeader = false,
+    isStickyHeader = true,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url).href;

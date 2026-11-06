@@ -1,7 +1,7 @@
 ---
 import { languages, useTranslations } from '../i18n/ui';
 
-const { isSticky = false, lang } = Astro.props;
+const { isSticky = true, lang } = Astro.props;
 const t = useTranslations(lang);
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -23,7 +23,7 @@ const isHome = pathWithoutBase === `/${lang}` || pathWithoutBase === `/${lang}/`
 const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
 ---
 
-<header class:list={["header-wrapper", { sticky: isSticky }]}>
+<header class="header-wrapper">
     <div class="topbar">
         <div class="logo">Rise And Fall <span>Community</span></div>
         <nav class="nav-links">
@@ -46,15 +46,13 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
 
 <style>
 .header-wrapper {
-    position: relative;
+    position: sticky;
+    top: 0;
     width: 100%;
     z-index: 1000;
-    background: var(--bg);
-}
-.sticky {
-    position: sticky; top: 0;
-    background: rgba(15, 15, 15, 0.7);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    background: rgba(15, 15, 15, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
