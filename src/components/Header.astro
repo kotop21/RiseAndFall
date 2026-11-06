@@ -47,7 +47,12 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
 </header>
 
 <style>
-.header-wrapper { width: 100%; z-index: 1000; }
+.header-wrapper {
+    position: relative;
+    width: 100%;
+    z-index: 1000;
+    background: var(--bg);
+}
 .sticky {
     position: sticky; top: 0;
     background: rgba(15, 15, 15, 0.7);

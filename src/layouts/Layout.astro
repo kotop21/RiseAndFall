@@ -85,8 +85,60 @@ const jsonLd = {
     </head>
     <body>
         <Header isSticky={isStickyHeader} lang={lang} />
+        <div id="page-preloader" class="preloader-overlay" transition:persist="preloader" aria-hidden="true">
+            <div class="spinner"></div>
+        </div>
         <div id="page-content">
             <slot />
         </div>
+
+        <script>
+            (() => {
+                let safetyTimer: ReturnType<typeof setTimeout> | null = null;
+                let navTimer: ReturnType<typeof setTimeout> | null = null;
+
+                const getPreloader = () => document.getElementById('page-preloader');
+
+                const hide = () => {
+                    if (safetyTimer) {
+                        clearTimeout(safetyTimer);
+                        safetyTimer = null;
+                    }
+                    if (navTimer) {
+                        clearTimeout(navTimer);
+                        navTimer = null;
+                    }
+                    const el = getPreloader();
+                    if (el) el.classList.add('is-hidden');
+                };
+
+                const show = () => {
+                    if (safetyTimer) clearTimeout(safetyTimer);
+                    const el = getPreloader();
+                    if (el) {
+                        el.classList.remove('is-hidden');
+                        safetyTimer = setTimeout(hide, 3000);
+                    }
+                };
+
+                // Cold start: hide when window and resources are fully ready
+                if (document.readyState === 'complete') {
+                    hide();
+                } else {
+                    window.addEventListener('load', hide, { once: true });
+                    safetyTimer = setTimeout(hide, 3000);
+                }
+
+                // Astro ClientRouter page transitions
+                document.addEventListener('astro:before-preparation', () => {
+                    if (navTimer) clearTimeout(navTimer);
+                    navTimer = setTimeout(show, 60);
+                });
+
+                document.addEventListener('astro:page-load', () => {
+                    hide();
+                });
+            })();
+        </script>
     </body>
 </html>
