@@ -8,7 +8,6 @@ export const defaultLang = 'ru';
 export const ui = {
   ru: {
     'nav.home': 'Главная',
-    'nav.leaderboard': 'Рейтинг',
     'nav.wiki': 'Вики',
     'hero.title': 'Rise and Fall:<br>Civilizations at War',
     'hero.desc': 'Единая точка входа в мир Rise And Fall: Civilizations at War. Официальный хаб сообщества: актуальная база знаний, глобальный рейтинг игроков и пошаговые инструкции для новичков.',
@@ -23,7 +22,6 @@ export const ui = {
   },
   en: {
     'nav.home': 'Home',
-    'nav.leaderboard': 'Leaderboard',
     'nav.wiki': 'Wiki',
     'hero.title': 'Rise and Fall:<br>Civilizations at War',
     'hero.desc': 'The single entry point to the world of Rise And Fall: Civilizations at War. Official community hub: up-to-date knowledge base, global player rankings, and step-by-step guides.',

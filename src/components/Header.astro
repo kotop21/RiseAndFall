@@ -20,7 +20,6 @@ if (!pathWithoutLang.startsWith('/')) {
 }
 
 const isHome = pathWithoutBase === `/${lang}` || pathWithoutBase === `/${lang}/`;
-const isLeaderboard = pathWithoutBase.startsWith(`/${lang}/leaderboard`);
 const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
 ---
 
@@ -29,7 +28,6 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
         <div class="logo">Rise And Fall <span>Community</span></div>
         <nav class="nav-links">
             <a href={`${base}/${lang}/`} class={isHome ? "active" : ""} data-astro-prefetch="viewport">{t('nav.home')}</a>
-            <a href={`${base}/${lang}/leaderboard/`} class={isLeaderboard ? "active" : ""} data-astro-prefetch="viewport">{t('nav.leaderboard')}</a>
             <a href={`${base}/${lang}/wiki/`} class={isWiki ? "active" : ""} data-astro-prefetch="viewport">{t('nav.wiki')}</a>
         </nav>
 
