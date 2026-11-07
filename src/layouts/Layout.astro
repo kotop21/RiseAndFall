@@ -96,8 +96,10 @@ const jsonLd = {
             (() => {
                 let safetyTimer: ReturnType<typeof setTimeout> | null = null;
                 let spinnerTimer: ReturnType<typeof setTimeout> | null = null;
+                let isLanguageTransition = false;
 
                 const getPreloader = () => document.getElementById('page-preloader');
+                const getContent = () => document.getElementById('page-content');
 
                 const showSpinner = () => {
                     if (safetyTimer) clearTimeout(safetyTimer);
@@ -129,20 +131,67 @@ const jsonLd = {
                     safetyTimer = setTimeout(hideSpinner, 3000);
                 }
 
-                // Astro ClientRouter page transitions (no artificial fade delays)
-                document.addEventListener('astro:before-preparation', () => {
+                // Detect language switch clicks in capture phase before Astro ClientRouter
+                document.addEventListener('click', (e) => {
+                    const target = (e.target as HTMLElement)?.closest('a');
+                    if (target && target.hasAttribute('data-lang-switch')) {
+                        isLanguageTransition = true;
+                    }
+                }, true);
+
+                // Astro ClientRouter page transitions
+                document.addEventListener('astro:before-preparation', (event: any) => {
+                    const isMobile = window.innerWidth <= 768;
+                    const sourceEl = event.sourceElement as HTMLElement | undefined;
+                    const fromPath = event.from?.pathname || '';
+                    const toPath = event.to?.pathname || '';
+                    const normalizePath = (p: string) => p.replace(/\/(ru|en)(\/|$)/, '/');
+
+                    const isLang = isLanguageTransition || 
+                        Boolean(sourceEl?.closest('[data-lang-switch]')) ||
+                        (Boolean(fromPath) && Boolean(toPath) && normalizePath(fromPath) === normalizePath(toPath));
+
+                    // On mobile OR during language switch: NO fade-out, NO artificial delay!
+                    if (isMobile || isLang) {
+                        document.documentElement.classList.add(isLang ? 'no-lang-transition' : 'no-fade-transition');
+                        return;
+                    }
+
                     if (spinnerTimer) clearTimeout(spinnerTimer);
+
+                    // Normal desktop page/tab transitions (Home <-> Wiki): smooth fade-in/fade-out
+                    const content = getContent();
+                    if (content) {
+                        content.classList.add('page-fading-out');
+                    }
+
+                    const originalLoader = event.loader;
+                    event.loader = async () => {
+                        const fadePromise = new Promise(resolve => setTimeout(resolve, 120));
+                        await Promise.all([originalLoader(), fadePromise]);
+                    };
+
                     spinnerTimer = setTimeout(() => {
                         showSpinner();
-                    }, 120);
+                    }, 140);
                 });
 
                 document.addEventListener('astro:after-swap', () => {
                     hideSpinner();
+                    document.documentElement.classList.remove('no-lang-transition');
+                    document.documentElement.classList.remove('no-fade-transition');
+                    isLanguageTransition = false;
                 });
 
                 document.addEventListener('astro:page-load', () => {
                     hideSpinner();
+                    document.documentElement.classList.remove('no-lang-transition');
+                    document.documentElement.classList.remove('no-fade-transition');
+                    isLanguageTransition = false;
+                    const content = getContent();
+                    if (content) {
+                        content.classList.remove('page-fading-out');
+                    }
                 });
 
                 // Smooth scrolling only for in-page anchor links (e.g. Table of Contents in Wiki)

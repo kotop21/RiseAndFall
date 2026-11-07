@@ -7,6 +7,8 @@
 html, body {
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
+    max-width: 100%;
     background: var(--bg);
     color: var(--fg);
     font-family: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
@@ -38,10 +40,74 @@ html, body {
     mix-blend-mode: normal;
 }
 
-::view-transition-group(page-content),
-::view-transition-old(page-content),
-::view-transition-new(page-content) {
+#page-content.page-fading-out {
+    opacity: 0;
+    transition: opacity 120ms ease-out;
+}
+
+@keyframes pageFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+::view-transition-group(page-content) {
     animation: none;
+}
+
+::view-transition-old(page-content) {
+    animation: none;
+    opacity: 0;
+}
+
+::view-transition-new(page-content) {
+    animation: 160ms ease-in both pageFadeIn;
+}
+
+/* Instant language switch or mobile: completely disable transition animations */
+html.no-lang-transition ::view-transition-group(page-content),
+html.no-lang-transition ::view-transition-old(page-content),
+html.no-lang-transition ::view-transition-new(page-content),
+html.no-fade-transition ::view-transition-group(page-content),
+html.no-fade-transition ::view-transition-old(page-content),
+html.no-fade-transition ::view-transition-new(page-content) {
+    animation: none !important;
+}
+
+html.no-lang-transition ::view-transition-old(page-content),
+html.no-fade-transition ::view-transition-old(page-content) {
+    opacity: 0 !important;
+    display: none !important;
+}
+
+html.no-lang-transition ::view-transition-new(page-content),
+html.no-fade-transition ::view-transition-new(page-content) {
+    opacity: 1 !important;
+}
+
+@media (max-width: 768px) {
+    #page-content.page-fading-out {
+        opacity: 1 !important;
+        transition: none !important;
+    }
+
+    ::view-transition-group(page-content),
+    ::view-transition-old(page-content),
+    ::view-transition-new(page-content) {
+        animation: none !important;
+    }
+
+    ::view-transition-old(page-content) {
+        display: none !important;
+        opacity: 0 !important;
+    }
+
+    ::view-transition-new(page-content) {
+        opacity: 1 !important;
+    }
 }
 
 /* Preloader & Accent Spinner (instant toggle, no fade blend) */

@@ -36,20 +36,165 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
                 <a 
                     href={`${base}/${key}${pathWithoutLang}`} 
                     class={lang === key ? "active-lang" : ""}
+                    data-lang-switch="true"
                 >
                     {key.toUpperCase()}
                 </a>
             ))}
         </div>
+
+        <button 
+            class="burger-btn" 
+            id="burger-btn" 
+            aria-label="Toggle navigation menu" 
+            aria-expanded="false" 
+            aria-controls="mobile-menu"
+            type="button"
+        >
+            <span class="line line-1"></span>
+            <span class="line line-2"></span>
+            <span class="line line-3"></span>
+        </button>
     </div>
 </header>
+
+<div class="mobile-menu-wrapper" id="mobile-menu" aria-hidden="true">
+    <div class="mobile-menu-overlay">
+        <nav class="mobile-nav-links">
+            <a href={`${base}/${lang}/`} class={isHome ? "active" : ""} data-astro-prefetch="viewport">{t('nav.home')}</a>
+            <a href={`${base}/${lang}/wiki/`} class={isWiki ? "active" : ""} data-astro-prefetch="viewport">{t('nav.wiki')}</a>
+        </nav>
+        <hr class="mobile-divider" />
+        <div class="mobile-lang-switcher">
+            {Object.entries(languages).map(([key, label], idx, arr) => (
+                <Fragment key={key}>
+                    <a 
+                        href={`${base}/${key}${pathWithoutLang}`} 
+                        class={lang === key ? "active-lang" : ""}
+                        data-lang-switch="true"
+                    >
+                        {key.toUpperCase()}
+                    </a>
+                    {idx < arr.length - 1 && <span class="lang-dash" aria-hidden="true">—</span>}
+                </Fragment>
+            ))}
+        </div>
+    </div>
+</div>
+
+<script>
+    function setupMobileMenu() {
+        const burgerBtn = document.getElementById('burger-btn');
+        const menuOverlay = document.getElementById('mobile-menu');
+        if (!burgerBtn || !menuOverlay) return;
+
+        const closeMenu = () => {
+            menuOverlay.classList.remove('is-open');
+            burgerBtn.classList.remove('is-active');
+            burgerBtn.setAttribute('aria-expanded', 'false');
+            burgerBtn.setAttribute('aria-label', 'Open navigation menu');
+            menuOverlay.setAttribute('aria-hidden', 'true');
+            menuOverlay.style.pointerEvents = '';
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+        };
+
+        const openMenu = () => {
+            menuOverlay.classList.add('is-open');
+            burgerBtn.classList.add('is-active');
+            burgerBtn.setAttribute('aria-expanded', 'true');
+            burgerBtn.setAttribute('aria-label', 'Close navigation menu');
+            menuOverlay.setAttribute('aria-hidden', 'false');
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+        };
+
+        const toggleMenu = () => {
+            if (menuOverlay.classList.contains('is-open')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        };
+
+        if ((burgerBtn as any)._toggleHandler) {
+            burgerBtn.removeEventListener('click', (burgerBtn as any)._toggleHandler);
+        }
+        (burgerBtn as any)._toggleHandler = toggleMenu;
+        burgerBtn.addEventListener('click', toggleMenu);
+
+        if ((menuOverlay as any)._clickHandler) {
+            menuOverlay.removeEventListener('click', (menuOverlay as any)._clickHandler);
+        }
+        const onOverlayClick = (e: MouseEvent) => {
+            const anchor = (e.target as HTMLElement)?.closest('a');
+            if (!anchor) return;
+
+            const targetHref = anchor.getAttribute('href');
+            if (!targetHref) return;
+
+            const targetUrl = new URL(anchor.href, window.location.href);
+            const isSamePage = targetUrl.pathname === window.location.pathname && 
+                               targetUrl.search === window.location.search &&
+                               targetUrl.hash === window.location.hash;
+
+            if (isSamePage) {
+                closeMenu();
+                return;
+            }
+
+            // Prevent duplicate taps while loading
+            menuOverlay.style.pointerEvents = 'none';
+
+            // Hold user inside menu during loading; fold menu away only AFTER load finishes
+            let hasFolded = false;
+            const foldAfterLoad = () => {
+                if (hasFolded) return;
+                hasFolded = true;
+                setTimeout(closeMenu, 80);
+            };
+
+            document.addEventListener('astro:after-swap', foldAfterLoad, { once: true });
+            document.addEventListener('astro:page-load', foldAfterLoad, { once: true });
+
+            // Safety timeout in case navigation is interrupted
+            setTimeout(closeMenu, 2500);
+        };
+        (menuOverlay as any)._clickHandler = onOverlayClick;
+        menuOverlay.addEventListener('click', onOverlayClick);
+
+        const onResize = () => {
+            if (window.innerWidth > 768 && menuOverlay.classList.contains('is-open')) {
+                closeMenu();
+            }
+        };
+        window.removeEventListener('resize', onResize);
+        window.addEventListener('resize', onResize);
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && menuOverlay.classList.contains('is-open')) {
+                closeMenu();
+            }
+        };
+        document.removeEventListener('keydown', onKeyDown);
+        document.addEventListener('keydown', onKeyDown);
+
+        window.removeEventListener('popstate', closeMenu);
+        window.addEventListener('popstate', closeMenu);
+    }
+
+    document.addEventListener('astro:page-load', setupMobileMenu);
+    if (document.readyState !== 'loading') {
+        setupMobileMenu();
+    }
+</script>
 
 <style>
 .header-wrapper {
     position: sticky;
     top: 0;
     width: 100%;
-    z-index: 1000;
+    z-index: 1002;
     background: rgba(15, 15, 15, 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -68,7 +213,7 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
 
 .logo { 
     justify-self: start;
-    font-size: 1.4rem; 
+    font-size: 1.2rem; 
     font-weight: bold; 
     color: var(--fg); 
     letter-spacing: 0.05em; 
@@ -89,19 +234,188 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
     gap: 0.8rem; 
     font-size: 0.9rem; 
 }
-.lang-switcher a { color: #666; transition: 0.2s; border: none; }
+.lang-switcher a { color: #666; border: none; }
 .lang-switcher a:hover { color: var(--fg); }
 .lang-switcher a.active-lang { color: var(--accent); font-weight: bold; }
 
+.burger-btn {
+    display: none;
+}
+
+.mobile-menu-wrapper {
+    display: none;
+}
+
 @media (max-width: 768px) {
-    .logo { display: none; }
     .topbar { 
         display: flex;
-        flex-direction: column; 
-        gap: 1rem; 
-        padding: 1rem; 
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1.25rem; 
+        box-sizing: border-box;
+        max-width: 100%;
     }
-    .nav-links { flex-wrap: wrap; justify-content: center; gap: 1rem; }
-    .lang-switcher { margin-top: 0.5rem; justify-self: center; align-self: center; }
+
+    .logo { 
+        display: block;
+        min-width: 0;
+    }
+
+    .nav-links,
+    .lang-switcher { 
+        display: none; 
+    }
+
+    .burger-btn {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 28px;
+        height: 20px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 1003;
+        position: relative;
+        flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .burger-btn .line {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background-color: var(--fg);
+        border-radius: 2px;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 0.25s ease,
+                    filter 0.25s ease;
+        transform-origin: center;
+    }
+
+    .burger-btn.is-active .line-1 {
+        transform: translateY(9px) rotate(45deg);
+    }
+
+    .burger-btn.is-active .line-2 {
+        opacity: 0;
+        filter: blur(4px);
+        transform: scaleX(0.2);
+    }
+
+    .burger-btn.is-active .line-3 {
+        transform: translateY(-9px) rotate(-45deg);
+    }
+
+    .mobile-menu-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 1001;
+        display: block;
+        visibility: hidden;
+        transition: visibility 0.35s ease;
+    }
+
+    .mobile-menu-wrapper.is-open {
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .mobile-menu-overlay {
+        width: 100%;
+        height: 100%;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        padding: 2rem;
+        transform: translateX(100%);
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform;
+    }
+
+    .mobile-menu-wrapper.is-open .mobile-menu-overlay {
+        transform: translateX(0);
+    }
+
+    .mobile-nav-links {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .mobile-nav-links a {
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: var(--fg);
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        padding: 0.4rem 1.2rem;
+        letter-spacing: 0.04em;
+        transition: color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .mobile-nav-links a:hover {
+        color: var(--accent);
+    }
+
+    .mobile-nav-links a.active {
+        color: var(--accent);
+        border-color: var(--accent);
+        opacity: 1;
+    }
+
+    .mobile-divider {
+        width: 80px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        margin: 2.2rem 0;
+    }
+
+    .mobile-lang-switcher {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        justify-content: center;
+        gap: 1.2rem;
+    }
+
+    .mobile-lang-switcher a {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #777;
+        text-decoration: none;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        letter-spacing: 0.05em;
+        transition: color 0.2s ease;
+    }
+
+    .mobile-lang-switcher a:hover {
+        color: var(--fg);
+    }
+
+    .mobile-lang-switcher a.active-lang {
+        color: var(--accent);
+        font-weight: bold;
+    }
+
+    .mobile-lang-switcher .lang-dash {
+        color: #555;
+        font-size: 1.25rem;
+        user-select: none;
+    }
 }
 </style>
