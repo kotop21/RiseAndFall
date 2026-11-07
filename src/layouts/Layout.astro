@@ -141,7 +141,7 @@ const jsonLd = {
 
                 // Astro ClientRouter page transitions
                 document.addEventListener('astro:before-preparation', (event: any) => {
-                    const isMobile = window.innerWidth <= 768;
+                    const isMobile = window.innerWidth <= 880;
                     const sourceEl = event.sourceElement as HTMLElement | undefined;
                     const fromPath = event.from?.pathname || '';
                     const toPath = event.to?.pathname || '';

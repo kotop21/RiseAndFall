@@ -7,7 +7,7 @@
 html, body {
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
     background: var(--bg);
     color: var(--fg);
@@ -34,10 +34,14 @@ html, body {
 ::view-transition-group(site-header) {
     animation: none;
 }
-::view-transition-old(site-header),
+::view-transition-old(site-header) {
+    animation: none !important;
+    display: none !important;
+    opacity: 0 !important;
+}
 ::view-transition-new(site-header) {
-    animation: none;
-    mix-blend-mode: normal;
+    animation: none !important;
+    mix-blend-mode: normal !important;
 }
 
 #page-content.page-fading-out {
@@ -68,6 +72,17 @@ html, body {
 }
 
 /* Instant language switch or mobile: completely disable transition animations */
+html.no-lang-transition .header-wrapper,
+html.no-fade-transition .header-wrapper {
+    view-transition-name: none !important;
+}
+
+html.no-lang-transition ::view-transition-group(site-header),
+html.no-lang-transition ::view-transition-old(site-header),
+html.no-lang-transition ::view-transition-new(site-header),
+html.no-fade-transition ::view-transition-group(site-header),
+html.no-fade-transition ::view-transition-old(site-header),
+html.no-fade-transition ::view-transition-new(site-header),
 html.no-lang-transition ::view-transition-group(page-content),
 html.no-lang-transition ::view-transition-old(page-content),
 html.no-lang-transition ::view-transition-new(page-content),
@@ -77,18 +92,22 @@ html.no-fade-transition ::view-transition-new(page-content) {
     animation: none !important;
 }
 
+html.no-lang-transition ::view-transition-old(site-header),
+html.no-fade-transition ::view-transition-old(site-header),
 html.no-lang-transition ::view-transition-old(page-content),
 html.no-fade-transition ::view-transition-old(page-content) {
     opacity: 0 !important;
     display: none !important;
 }
 
+html.no-lang-transition ::view-transition-new(site-header),
+html.no-fade-transition ::view-transition-new(site-header),
 html.no-lang-transition ::view-transition-new(page-content),
 html.no-fade-transition ::view-transition-new(page-content) {
     opacity: 1 !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 880px) {
     #page-content.page-fading-out {
         opacity: 1 !important;
         transition: none !important;
@@ -203,7 +222,7 @@ code {
     font-size: 0.95rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 880px) {
     html, body {
         font-size: 16px;
     }

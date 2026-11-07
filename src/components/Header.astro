@@ -86,27 +86,26 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
     function setupMobileMenu() {
         const burgerBtn = document.getElementById('burger-btn');
         const menuOverlay = document.getElementById('mobile-menu');
+        const headerWrapper = document.querySelector('.header-wrapper') as HTMLElement | null;
         if (!burgerBtn || !menuOverlay) return;
 
         const closeMenu = () => {
             menuOverlay.classList.remove('is-open');
+            headerWrapper?.classList.remove('is-menu-open');
             burgerBtn.classList.remove('is-active');
             burgerBtn.setAttribute('aria-expanded', 'false');
             burgerBtn.setAttribute('aria-label', 'Open navigation menu');
             menuOverlay.setAttribute('aria-hidden', 'true');
             menuOverlay.style.pointerEvents = '';
-            document.documentElement.style.overflow = '';
-            document.body.style.overflow = '';
         };
 
         const openMenu = () => {
             menuOverlay.classList.add('is-open');
+            headerWrapper?.classList.add('is-menu-open');
             burgerBtn.classList.add('is-active');
             burgerBtn.setAttribute('aria-expanded', 'true');
             burgerBtn.setAttribute('aria-label', 'Close navigation menu');
             menuOverlay.setAttribute('aria-hidden', 'false');
-            document.documentElement.style.overflow = 'hidden';
-            document.body.style.overflow = 'hidden';
         };
 
         const toggleMenu = () => {
@@ -122,6 +121,39 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
         }
         (burgerBtn as any)._toggleHandler = toggleMenu;
         burgerBtn.addEventListener('click', toggleMenu);
+
+        // Lock background touch/wheel scroll without breaking position:sticky or causing scroll jumps
+        const onTouchMove = (e: TouchEvent) => {
+            if (!menuOverlay.classList.contains('is-open')) return;
+            const target = e.target as HTMLElement | null;
+            const scrollable = target?.closest('.mobile-menu-overlay');
+            if (scrollable && scrollable.scrollHeight > scrollable.clientHeight) {
+                return;
+            }
+            e.preventDefault();
+        };
+
+        const onWheel = (e: WheelEvent) => {
+            if (!menuOverlay.classList.contains('is-open')) return;
+            const target = e.target as HTMLElement | null;
+            const scrollable = target?.closest('.mobile-menu-overlay');
+            if (scrollable && scrollable.scrollHeight > scrollable.clientHeight) {
+                return;
+            }
+            e.preventDefault();
+        };
+
+        if ((window as any)._menuTouchHandler) {
+            window.removeEventListener('touchmove', (window as any)._menuTouchHandler);
+        }
+        (window as any)._menuTouchHandler = onTouchMove;
+        window.addEventListener('touchmove', onTouchMove, { passive: false });
+
+        if ((window as any)._menuWheelHandler) {
+            window.removeEventListener('wheel', (window as any)._menuWheelHandler);
+        }
+        (window as any)._menuWheelHandler = onWheel;
+        window.addEventListener('wheel', onWheel, { passive: false });
 
         if ((menuOverlay as any)._clickHandler) {
             menuOverlay.removeEventListener('click', (menuOverlay as any)._clickHandler);
@@ -164,7 +196,7 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
         menuOverlay.addEventListener('click', onOverlayClick);
 
         const onResize = () => {
-            if (window.innerWidth > 768 && menuOverlay.classList.contains('is-open')) {
+            if (window.innerWidth > 880 && menuOverlay.classList.contains('is-open')) {
                 closeMenu();
             }
         };
@@ -195,44 +227,67 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
     top: 0;
     width: 100%;
     z-index: 1002;
+    display: block;
     background: rgba(15, 15, 15, 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.header-wrapper.is-menu-open {
+    position: fixed;
+    top: 0;
+    left: 0;
+    touch-action: none;
+}
+
 .topbar {
-    display: grid; 
-    grid-template-columns: 1fr auto 1fr; 
+    position: relative;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 2rem; 
+    padding: 0.5rem clamp(0.75rem, 2vw, 2rem); 
     max-width: 1500px; 
     margin: 0 auto; 
     width: 100%;
+    box-sizing: border-box;
 }
 
 .logo { 
-    justify-self: start;
-    font-size: 1.2rem; 
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: clamp(1.05rem, 1.3vw, 1.2rem); 
     font-weight: bold; 
     color: var(--fg); 
     letter-spacing: 0.05em; 
+    z-index: 1;
 }
 .logo span { color: var(--accent); }
 
 .nav-links { 
-    justify-self: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex; 
-    gap: 1.5rem; 
+    align-items: center;
+    gap: clamp(0.75rem, 1.2vw, 1.5rem); 
+    white-space: nowrap;
+    z-index: 2;
 }
-.nav-links a { border-bottom: 1px solid transparent; }
+.nav-links a { 
+    border-bottom: 1px solid transparent; 
+    white-space: nowrap;
+}
 .nav-links a.active { color: var(--accent); border-color: var(--accent); opacity: 1; }
 
 .lang-switcher { 
-    justify-self: end;
+    flex-shrink: 0;
+    white-space: nowrap;
     display: flex; 
+    align-items: center;
     gap: 0.8rem; 
     font-size: 0.9rem; 
+    z-index: 1;
 }
 .lang-switcher a { color: #666; border: none; }
 .lang-switcher a:hover { color: var(--fg); }
@@ -246,7 +301,7 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
     display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 880px) {
     .topbar { 
         display: flex;
         flex-direction: row;
@@ -260,6 +315,10 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
     .logo { 
         display: block;
         min-width: 0;
+        font-size: clamp(0.95rem, 4.2vw, 1.2rem);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .nav-links,
@@ -317,6 +376,8 @@ const isWiki = pathWithoutBase.startsWith(`/${lang}/wiki`);
         height: 100%;
         height: 100dvh;
         overflow: hidden;
+        overscroll-behavior: contain;
+        touch-action: none;
         pointer-events: none;
         z-index: 1001;
         display: block;

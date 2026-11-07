@@ -1,0 +1,472 @@
+---
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'ru' } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const slides = [
+  {
+    src: `${base}/images/launcher-home.webp`,
+    titleRu: 'Главное меню: запуск игры в 1 клик',
+    titleEn: 'Home Menu: 1-Click Game Launch',
+    isLauncher: true,
+  },
+  {
+    src: `${base}/images/launcher-install.webp`,
+    titleRu: 'Умная установка и авто-настройка',
+    titleEn: 'Automated Install & Setup',
+    isLauncher: true,
+  },
+  {
+    src: `${base}/images/launcher-settings.webp`,
+    titleRu: 'Встроенные настройки, моды и фиксы',
+    titleEn: 'Integrated Settings, Mods & Fixes',
+    isLauncher: true,
+  },
+  {
+    src: `${base}/images/game-1.webp`,
+    titleRu: 'Осада и штурм античного города',
+    titleEn: 'Siege & Ancient City Assault',
+    isLauncher: false,
+  },
+  {
+    src: `${base}/images/game-2.webp`,
+    titleRu: 'Масштабные сражения великих империй',
+    titleEn: 'Massive Battles of Ancient Empires',
+    isLauncher: false,
+  },
+  {
+    src: `${base}/images/game-3.webp`,
+    titleRu: 'Морские битвы и абордажные бои',
+    titleEn: 'Naval Combat & Ship Boarding',
+    isLauncher: false,
+  },
+];
+
+const heading = lang === 'ru' ? '📸 Скриншоты' : '📸 Screenshots';
+const prevLabel = lang === 'ru' ? 'Предыдущий слайд' : 'Previous slide';
+const nextLabel = lang === 'ru' ? 'Следующий слайд' : 'Next slide';
+---
+
+<section class="gallery-section" aria-label={heading}>
+  <div class="gallery-header">
+    <h2>{heading}</h2>
+    <div class="gallery-controls">
+      <button type="button" class="ctrl-btn prev-btn" aria-label={prevLabel} title={prevLabel}>
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      <button type="button" class="ctrl-btn next-btn" aria-label={nextLabel} title={nextLabel}>
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="gallery-track-wrapper">
+    <div class="gallery-track" tabindex="0" role="region" aria-label="Слайды скриншотов">
+      {slides.map((slide, index) => {
+        const title = lang === 'ru' ? slide.titleRu : slide.titleEn;
+        return (
+          <div class="gallery-slide" data-index={index}>
+            <div class="card-inner">
+              <div class="card-image-box">
+                <img 
+                  src={slide.src} 
+                  alt={title} 
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  class={slide.isLauncher ? "img-launcher" : "img-game"}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+
+  <div class="gallery-dots" role="tablist" aria-label="Выбор слайда">
+    {slides.map((_, index) => (
+      <button 
+        type="button" 
+        class={`dot-btn ${index === 0 ? 'is-active' : ''}`}
+        data-index={index}
+        role="tab"
+        aria-selected={index === 0 ? "true" : "false"}
+        aria-label={`Слайд ${index + 1}`}
+      />
+    ))}
+  </div>
+</section>
+
+<script>
+  function initGallery() {
+    const sections = document.querySelectorAll('.gallery-section');
+    sections.forEach((section) => {
+      if (section.getAttribute('data-gallery-init') === 'true') return;
+      section.setAttribute('data-gallery-init', 'true');
+
+      const track = section.querySelector('.gallery-track') as HTMLElement | null;
+      const prevBtn = section.querySelector('.prev-btn') as HTMLButtonElement | null;
+      const nextBtn = section.querySelector('.next-btn') as HTMLButtonElement | null;
+      const dots = section.querySelectorAll('.dot-btn');
+      const slides = section.querySelectorAll('.gallery-slide');
+
+      if (!track || slides.length === 0) return;
+
+      let activeIndex = 0;
+      let isProgrammaticScroll = false;
+      let programmaticTimer: ReturnType<typeof setTimeout> | null = null;
+      let rafId: number | null = null;
+      let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+
+      const setActiveDot = (index: number) => {
+        activeIndex = Math.max(0, Math.min(slides.length - 1, index));
+        dots.forEach((dot, i) => {
+          const isActive = i === activeIndex;
+          dot.classList.toggle('is-active', isActive);
+          dot.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+      };
+
+      const getCurrentIndex = () => {
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        if (maxScroll <= 5) return 0;
+
+        // Threshold for reaching the end
+        if (track.scrollLeft >= maxScroll - 25) {
+          return slides.length - 1;
+        }
+        // Threshold for reaching the start
+        if (track.scrollLeft <= 25) {
+          return 0;
+        }
+
+        const viewCenter = track.scrollLeft + track.clientWidth / 2;
+        let bestIndex = 0;
+        let minDiff = Infinity;
+
+        slides.forEach((slide, i) => {
+          const el = slide as HTMLElement;
+          const slideCenter = (el.offsetLeft - track.offsetLeft) + el.offsetWidth / 2;
+          const diff = Math.abs(slideCenter - viewCenter);
+          if (diff < minDiff) {
+            minDiff = diff;
+            bestIndex = i;
+          }
+        });
+
+        return bestIndex;
+      };
+
+      const scrollToSlide = (index: number, smooth = true) => {
+        const targetSlide = slides[index] as HTMLElement | undefined;
+        if (!targetSlide) return;
+
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        if (maxScroll <= 0) return;
+
+        const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto';
+
+        if (index === 0) {
+          track.scrollTo({ left: 0, behavior });
+          return;
+        }
+        if (index === slides.length - 1) {
+          track.scrollTo({ left: maxScroll, behavior });
+          return;
+        }
+
+        const slideCenter = (targetSlide.offsetLeft - track.offsetLeft) + targetSlide.offsetWidth / 2;
+        const targetScroll = slideCenter - track.clientWidth / 2;
+        track.scrollTo({
+          left: Math.max(0, Math.min(maxScroll, targetScroll)),
+          behavior
+        });
+      };
+
+      const goToSlide = (index: number) => {
+        const target = Math.max(0, Math.min(slides.length - 1, index));
+        // Instantly update active dot
+        setActiveDot(target);
+
+        // Lock programmatic scroll briefly to prevent scroll listener fighting
+        isProgrammaticScroll = true;
+        if (programmaticTimer) clearTimeout(programmaticTimer);
+        programmaticTimer = setTimeout(() => {
+          isProgrammaticScroll = false;
+        }, 450);
+
+        scrollToSlide(target, true);
+      };
+
+      if (prevBtn) {
+        prevBtn.onclick = () => {
+          goToSlide(activeIndex - 1);
+        };
+      }
+
+      if (nextBtn) {
+        nextBtn.onclick = () => {
+          goToSlide(activeIndex + 1);
+        };
+      }
+
+      dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+          goToSlide(index);
+        });
+      });
+
+      // Handle user manual interaction to release programmatic lock
+      const onUserInteraction = () => {
+        isProgrammaticScroll = false;
+        if (programmaticTimer) {
+          clearTimeout(programmaticTimer);
+          programmaticTimer = null;
+        }
+      };
+      track.addEventListener('pointerdown', onUserInteraction, { passive: true });
+      track.addEventListener('touchstart', onUserInteraction, { passive: true });
+      track.addEventListener('wheel', onUserInteraction, { passive: true });
+
+      // Manual scrolling listener
+      track.addEventListener('scroll', () => {
+        if (isProgrammaticScroll) return;
+
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          const idx = getCurrentIndex();
+          if (idx !== activeIndex) {
+            setActiveDot(idx);
+          }
+        });
+
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          if (!isProgrammaticScroll) {
+            const idx = getCurrentIndex();
+            if (idx !== activeIndex) {
+              setActiveDot(idx);
+            }
+          }
+        }, 80);
+      }, { passive: true });
+
+      // Keyboard left/right arrows when track is focused
+      track.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          goToSlide(activeIndex - 1);
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          goToSlide(activeIndex + 1);
+        }
+      });
+
+      // Re-center active slide on resize
+      window.addEventListener('resize', () => {
+        scrollToSlide(activeIndex, false);
+      }, { passive: true });
+    });
+  }
+
+  document.addEventListener('astro:page-load', initGallery);
+  if (document.readyState !== 'loading') {
+    initGallery();
+  }
+</script>
+
+<style>
+.gallery-section {
+  width: 100%;
+  margin: 1rem 0 3.5rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.gallery-header h2 {
+  font-size: 28px;
+  color: var(--fg);
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.gallery-controls {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--fg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.ctrl-btn:hover {
+  background: rgba(197, 160, 89, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ctrl-btn:active {
+  transform: scale(0.95);
+}
+
+.gallery-track-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+}
+
+.gallery-track {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 0.5rem 0.2rem 1rem 0.2rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  outline: none;
+}
+
+.gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-slide {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  box-sizing: border-box;
+}
+
+.card-inner {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.25s ease, background 0.25s ease;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100vw - 3rem);
+}
+
+.card-inner:hover {
+  border-color: rgba(197, 160, 89, 0.4);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.card-image-box {
+  width: auto;
+  height: clamp(240px, 45vw, 460px);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  line-height: 0;
+}
+
+.card-image-box img {
+  height: 100%;
+  width: auto;
+  max-width: calc(100vw - 4.5rem);
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.img-launcher {
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.img-game {
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.gallery-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.dot-btn {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: opacity 0.25s ease, background-color 0.25s ease;
+  opacity: 0.6;
+}
+
+.dot-btn:hover {
+  opacity: 0.9;
+  background-color: rgba(255, 255, 255, 0.45);
+}
+
+.dot-btn.is-active {
+  background-color: var(--accent);
+  opacity: 1;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .card-inner {
+    padding: 0.4rem;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .card-image-box {
+    height: clamp(200px, 55vw, 320px);
+  }
+
+  .card-image-box img {
+    max-width: calc(100vw - 3rem);
+  }
+
+  .ctrl-btn {
+    width: 34px;
+    height: 34px;
+  }
+}
+</style>
