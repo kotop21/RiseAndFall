@@ -95,48 +95,89 @@ const jsonLd = {
         <script>
             (() => {
                 let safetyTimer: ReturnType<typeof setTimeout> | null = null;
-                let navTimer: ReturnType<typeof setTimeout> | null = null;
+                let spinnerTimer: ReturnType<typeof setTimeout> | null = null;
 
                 const getPreloader = () => document.getElementById('page-preloader');
+                const getContent = () => document.getElementById('page-content');
 
-                const hide = () => {
+                const showSpinner = () => {
+                    if (safetyTimer) clearTimeout(safetyTimer);
+                    const el = getPreloader();
+                    if (el) {
+                        el.classList.remove('is-hidden');
+                        safetyTimer = setTimeout(hideSpinner, 3500);
+                    }
+                };
+
+                const hideSpinner = () => {
                     if (safetyTimer) {
                         clearTimeout(safetyTimer);
                         safetyTimer = null;
                     }
-                    if (navTimer) {
-                        clearTimeout(navTimer);
-                        navTimer = null;
+                    if (spinnerTimer) {
+                        clearTimeout(spinnerTimer);
+                        spinnerTimer = null;
                     }
                     const el = getPreloader();
                     if (el) el.classList.add('is-hidden');
                 };
 
-                const show = () => {
-                    if (safetyTimer) clearTimeout(safetyTimer);
-                    const el = getPreloader();
-                    if (el) {
-                        el.classList.remove('is-hidden');
-                        safetyTimer = setTimeout(hide, 3000);
-                    }
-                };
-
                 // Cold start: hide when window and resources are fully ready
                 if (document.readyState === 'complete') {
-                    hide();
+                    hideSpinner();
                 } else {
-                    window.addEventListener('load', hide, { once: true });
-                    safetyTimer = setTimeout(hide, 3000);
+                    window.addEventListener('load', hideSpinner, { once: true });
+                    safetyTimer = setTimeout(hideSpinner, 3000);
                 }
 
                 // Astro ClientRouter page transitions
-                document.addEventListener('astro:before-preparation', () => {
-                    if (navTimer) clearTimeout(navTimer);
-                    navTimer = setTimeout(show, 60);
+                document.addEventListener('astro:before-preparation', (event: any) => {
+                    if (spinnerTimer) clearTimeout(spinnerTimer);
+
+                    // 1. Immediately fade out current page content in place
+                    const content = getContent();
+                    if (content) {
+                        content.classList.add('page-fading-out');
+                    }
+
+                    // 2. Give the old page 120ms to fully dissolve in place before swapping DOM & scroll
+                    const originalLoader = event.loader;
+                    event.loader = async () => {
+                        const fadePromise = new Promise(resolve => setTimeout(resolve, 120));
+                        await Promise.all([originalLoader(), fadePromise]);
+                    };
+
+                    // 3. Only show spinner if loading takes longer than the fade-out (140ms)
+                    spinnerTimer = setTimeout(() => {
+                        showSpinner();
+                    }, 140);
+                });
+
+                document.addEventListener('astro:after-swap', () => {
+                    hideSpinner();
                 });
 
                 document.addEventListener('astro:page-load', () => {
-                    hide();
+                    hideSpinner();
+                    const content = getContent();
+                    if (content) {
+                        content.classList.remove('page-fading-out');
+                    }
+                });
+
+                // Smooth scrolling only for in-page anchor links (e.g. Table of Contents in Wiki)
+                document.addEventListener('click', (e) => {
+                    const anchor = (e.target as HTMLElement)?.closest('a[href^="#"]');
+                    if (!anchor) return;
+                    const href = anchor.getAttribute('href');
+                    if (href && href.length > 1) {
+                        const target = document.querySelector(href);
+                        if (target) {
+                            e.preventDefault();
+                            target.scrollIntoView({ behavior: 'smooth' });
+                            history.pushState(null, '', href);
+                        }
+                    }
                 });
             })();
         </script>
