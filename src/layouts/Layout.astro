@@ -98,7 +98,6 @@ const jsonLd = {
                 let spinnerTimer: ReturnType<typeof setTimeout> | null = null;
 
                 const getPreloader = () => document.getElementById('page-preloader');
-                const getContent = () => document.getElementById('page-content');
 
                 const showSpinner = () => {
                     if (safetyTimer) clearTimeout(safetyTimer);
@@ -130,27 +129,12 @@ const jsonLd = {
                     safetyTimer = setTimeout(hideSpinner, 3000);
                 }
 
-                // Astro ClientRouter page transitions
-                document.addEventListener('astro:before-preparation', (event: any) => {
+                // Astro ClientRouter page transitions (no artificial fade delays)
+                document.addEventListener('astro:before-preparation', () => {
                     if (spinnerTimer) clearTimeout(spinnerTimer);
-
-                    // 1. Immediately fade out current page content in place
-                    const content = getContent();
-                    if (content) {
-                        content.classList.add('page-fading-out');
-                    }
-
-                    // 2. Give the old page 120ms to fully dissolve in place before swapping DOM & scroll
-                    const originalLoader = event.loader;
-                    event.loader = async () => {
-                        const fadePromise = new Promise(resolve => setTimeout(resolve, 120));
-                        await Promise.all([originalLoader(), fadePromise]);
-                    };
-
-                    // 3. Only show spinner if loading takes longer than the fade-out (140ms)
                     spinnerTimer = setTimeout(() => {
                         showSpinner();
-                    }, 140);
+                    }, 120);
                 });
 
                 document.addEventListener('astro:after-swap', () => {
@@ -159,10 +143,6 @@ const jsonLd = {
 
                 document.addEventListener('astro:page-load', () => {
                     hideSpinner();
-                    const content = getContent();
-                    if (content) {
-                        content.classList.remove('page-fading-out');
-                    }
                 });
 
                 // Smooth scrolling only for in-page anchor links (e.g. Table of Contents in Wiki)
